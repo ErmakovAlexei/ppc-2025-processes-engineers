@@ -24,7 +24,7 @@ bool ErmakovANumbViolElemVecSEQ::PreProcessingImpl() {
 }
 
 bool ErmakovANumbViolElemVecSEQ::RunImpl() {
-  const int n = GetInput();
+  int n = GetInput();
   if (n <= 0){
     GetOutput() = 0;
     return true;
@@ -40,10 +40,11 @@ bool ErmakovANumbViolElemVecSEQ::RunImpl() {
   int viol = 0;
   for(int i = 0; i + 1 < n; ++i){
     if (vec[i] > vec[i + 1]) {
-      ++viol;
+      viol += 1;
     }
   }
 
+  
   GetOutput() = viol;
   return true;
 

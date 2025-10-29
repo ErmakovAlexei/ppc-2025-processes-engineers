@@ -34,7 +34,7 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
 
   std::vector<int> full_vec;
   if (world_rank == 0){
-    std::mt19937 rng(n);
+    std::mt19937 rng(static_cast<unsigned int>(GetInput()));
     std::uniform_int_distribution<int> dist(0, 1000000);
 
     full_vec.resize(n);
