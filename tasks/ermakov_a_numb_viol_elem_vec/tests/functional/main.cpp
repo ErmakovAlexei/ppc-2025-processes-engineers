@@ -25,16 +25,13 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
   static std::string PrintTestParam(const TestType &test_param) {
     const auto &vec = std::get<0>(test_param);
     int expected = std::get<1>(test_param);
-    std::string name = "size_" + std::to_string(vec.size()) +
-                       "_exp_" + std::to_string(expected);
+    std::string name = "size_" + std::to_string(vec.size()) + "_exp_" + std::to_string(expected);
     return name;
   }
 
  protected:
   void SetUp() override {
-    const auto &params =
-        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(
-            GetParam());
+    const auto &params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     input_data_ = std::get<0>(params);
     expected_output_ = std::get<1>(params);
   }
@@ -43,7 +40,9 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
     return output_data == expected_output_;
   }
 
-  InType GetTestInputData() final { return input_data_; }
+  InType GetTestInputData() final {
+    return input_data_;
+  }
 
  private:
   InType input_data_{};
@@ -74,18 +73,13 @@ TEST_P(ErmakovANumbViolElemVecFuncTests, CountViolations) {
 }
 
 const auto kTestTasksList = std::tuple_cat(
-    ppc::util::AddFuncTask<ErmakovANumbViolElemVecMPI, InType>(
-        kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec),
-    ppc::util::AddFuncTask<ErmakovANumbViolElemVecSEQ, InType>(
-        kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec));
+    ppc::util::AddFuncTask<ErmakovANumbViolElemVecMPI, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec),
+    ppc::util::AddFuncTask<ErmakovANumbViolElemVecSEQ, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
-const auto kFuncTestName =
-    ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<
-        ErmakovANumbViolElemVecFuncTests>;
+const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVecTests, ErmakovANumbViolElemVecFuncTests,
-                         kGtestValues, kFuncTestName);
+INSTANTIATE_TEST_SUITE_P(NumViolElemVecTests, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
 
 }  // namespace
 

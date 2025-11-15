@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include <numeric>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
@@ -31,9 +32,8 @@ TEST_P(ErmakovANumbViolElemVecPerfTests, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
-const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(
-        PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
+const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(
+    PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

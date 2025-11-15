@@ -5,7 +5,7 @@
 
 #include "task/include/task.hpp"
 
-namespace  ermakov_a_numb_viol_elem_vec{
+namespace ermakov_a_numb_viol_elem_vec {
 
 using InType = std::vector<int>;
 using OutType = int;
