@@ -7,9 +7,9 @@
 
 namespace  ermakov_a_numb_viol_elem_vec{
 
-using InType = int;
+using InType = std::vector<int>;
 using OutType = int;
-using TestType = std::tuple<int, std::string>;
+using TestType = std::tuple<std::vector<int>, int>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 
 }  // namespace ermakov_a_numb_viol_elem_vec

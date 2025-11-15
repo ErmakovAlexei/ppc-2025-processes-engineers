@@ -16,7 +16,7 @@ ErmakovANumbViolElemVecSEQ::ErmakovANumbViolElemVecSEQ(const InType &in) {
 }
 
 bool ErmakovANumbViolElemVecSEQ::ValidationImpl() {
-  return GetInput() > 0;
+  return true;
 }
 
 bool ErmakovANumbViolElemVecSEQ::PreProcessingImpl() {
@@ -24,23 +24,17 @@ bool ErmakovANumbViolElemVecSEQ::PreProcessingImpl() {
 }
 
 bool ErmakovANumbViolElemVecSEQ::RunImpl() {
-  int n = GetInput();
+  const auto& vec = GetInput();
+  int n = static_cast<int>(vec.size());
   if (n <= 0){
     GetOutput() = 0;
     return true;
-  }
-  std::vector<int> vec;
-  vec.reserve(n);
-  std::mt19937 rng(static_cast<unsigned int>(GetInput()));
-  std::uniform_int_distribution<int> dist(0, 1000000);
-  for(int i = 0; i < n; ++i){
-    vec.push_back(dist(rng));
   }
 
   int viol = 0;
   for(int i = 0; i + 1 < n; ++i){
     if (vec[i] > vec[i + 1]) {
-      viol += 1;
+      ++viol;
     }
   }
 

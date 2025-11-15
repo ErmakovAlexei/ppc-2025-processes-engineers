@@ -1,12 +1,8 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
-#include <cstdint>
 #include <numeric>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -20,65 +16,76 @@
 
 namespace ermakov_a_numb_viol_elem_vec {
 
+using ermakov_a_numb_viol_elem_vec::InType;
+using ermakov_a_numb_viol_elem_vec::OutType;
+using ermakov_a_numb_viol_elem_vec::TestType;
+
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
+    const auto &vec = std::get<0>(test_param);
+    int expected = std::get<1>(test_param);
+    std::string name = "size_" + std::to_string(vec.size()) +
+                       "_exp_" + std::to_string(expected);
+    return name;
   }
 
  protected:
   void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_ermakov_a_numb_viol_elem_vec, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, 0);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
-    }
-
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
+    const auto &params =
+        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(
+            GetParam());
+    input_data_ = std::get<0>(params);
+    expected_output_ = std::get<1>(params);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data >= 0;
+    return output_data == expected_output_;
   }
 
-  InType GetTestInputData() final {
-    return input_data_;
-  }
+  InType GetTestInputData() final { return input_data_; }
 
  private:
-  InType input_data_ = 0;
+  InType input_data_{};
+  OutType expected_output_{};
 };
 
 namespace {
 
-TEST_P(ErmakovANumbViolElemVecFuncTests, MatmulFromPic) {
+const std::array<TestType, 7> kTestParam = {
+
+    std::make_tuple(std::vector<int>{1, 2, 3, 4, 5}, 0),
+
+    std::make_tuple(std::vector<int>{5, 4, 3, 2, 1}, 4),
+
+    std::make_tuple(std::vector<int>{1, 3, 2, 5, 4}, 2),
+
+    std::make_tuple(std::vector<int>{7, 7, 7, 7}, 0),
+
+    std::make_tuple(std::vector<int>{42}, 0),
+
+    std::make_tuple(std::vector<int>{}, 0),
+
+    std::make_tuple(std::vector<int>{1, 3, 2, 4, 3, 5, 4}, 3),
+};
+
+TEST_P(ErmakovANumbViolElemVecFuncTests, CountViolations) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
-
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<ErmakovANumbViolElemVecMPI, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec),
-                   ppc::util::AddFuncTask<ErmakovANumbViolElemVecSEQ, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec));
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<ErmakovANumbViolElemVecMPI, InType>(
+        kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec),
+    ppc::util::AddFuncTask<ErmakovANumbViolElemVecSEQ, InType>(
+        kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
+const auto kFuncTestName =
+    ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<
+        ErmakovANumbViolElemVecFuncTests>;
 
-const auto kPerfTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
-
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, ErmakovANumbViolElemVecFuncTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(NumViolElemVecTests, ErmakovANumbViolElemVecFuncTests,
+                         kGtestValues, kFuncTestName);
 
 }  // namespace
 

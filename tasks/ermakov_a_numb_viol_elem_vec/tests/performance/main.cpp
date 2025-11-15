@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <numeric>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
 #include "ermakov_a_numb_viol_elem_vec/mpi/include/ops_mpi.hpp"
@@ -8,15 +9,17 @@
 namespace ermakov_a_numb_viol_elem_vec {
 
 class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 100;
+  const int kCount_ = 100000;
   InType input_data_{};
 
   void SetUp() override {
-    input_data_ = kCount_;
+    input_data_.resize(kCount_);
+    std::iota(input_data_.begin(), input_data_.end(), 0);
+    input_data_[kCount_ / 2] = -1;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return input_data_ == output_data;
+    return output_data >= 0;
   }
 
   InType GetTestInputData() final {
@@ -29,7 +32,8 @@ TEST_P(ErmakovANumbViolElemVecPerfTests, RunPerfModes) {
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
+    ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(
+        PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
