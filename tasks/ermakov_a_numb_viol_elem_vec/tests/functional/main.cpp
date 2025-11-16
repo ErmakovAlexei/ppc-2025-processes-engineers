@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <numeric>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
@@ -22,9 +21,9 @@ using ermakov_a_numb_viol_elem_vec::TestType;
 
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
-  static std::string PrintTestParam(const TestType &test_param) {
+  static auto PrintTestParam(const TestType &test_param) -> std::string {
     const auto &vec = std::get<0>(test_param);
-    int expected = std::get<1>(test_param);
+    const int expected = std::get<1>(test_param);
     std::string name = "size_" + std::to_string(vec.size()) + "_exp_" + std::to_string(expected);
     return name;
   }
@@ -36,16 +35,16 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
     expected_output_ = std::get<1>(params);
   }
 
-  bool CheckTestOutputData(OutType &output_data) final {
+  auto CheckTestOutputData(OutType &output_data) -> bool final {
     return output_data == expected_output_;
   }
 
-  InType GetTestInputData() final {
+  auto GetTestInputData() -> InType final {
     return input_data_;
   }
 
  private:
-  InType input_data_{};
+  InType input_data_;
   OutType expected_output_{};
 };
 

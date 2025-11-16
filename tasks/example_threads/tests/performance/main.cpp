@@ -18,11 +18,11 @@ class ExampleRunPerfTestThreads : public ppc::util::BaseRunPerfTests<InType, Out
     input_data_ = kCount_;
   }
 
-  bool CheckTestOutputData(OutType &output_data) final {
+  auto CheckTestOutputData(OutType &output_data) -> bool final {
     return input_data_ == output_data;
   }
 
-  InType GetTestInputData() final {
+  auto GetTestInputData() -> InType final {
     return input_data_;
   }
 };

@@ -4,7 +4,6 @@
 #include <tbb/tick_count.h>
 
 #include <concepts>
-#include <csignal>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -36,10 +35,10 @@ template <typename InType, typename OutType, typename TestType = void>
 /// @tparam TestType Type of the test case or parameter.
 class BaseRunFuncTests : public ::testing::TestWithParam<FuncTestParam<InType, OutType, TestType>> {
  public:
-  virtual bool CheckTestOutputData(OutType &output_data) = 0;
+  virtual auto CheckTestOutputData(OutType &output_data) -> bool = 0;
   /// @brief Provides input data for the task.
   /// @return Initialized input data.
-  virtual InType GetTestInputData() = 0;
+  virtual auto GetTestInputData() -> InType = 0;
 
   template <typename Derived>
   static void RequireStaticInterface() {
@@ -48,7 +47,7 @@ class BaseRunFuncTests : public ::testing::TestWithParam<FuncTestParam<InType, O
   }
 
   template <typename Derived>
-  static std::string PrintFuncTestName(const GTestFuncParam<InType, OutType, TestType> &info) {
+  static auto PrintFuncTestName(const GTestFuncParam<InType, OutType, TestType> &info) -> std::string {
     RequireStaticInterface<Derived>();
     TestType test_param = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(info.param);
     return std::get<static_cast<std::size_t>(GTestParamIndex::kNameTest)>(info.param) + "_" +
@@ -79,12 +78,12 @@ class BaseRunFuncTests : public ::testing::TestWithParam<FuncTestParam<InType, O
     EXPECT_FALSE(test_name.find("unknown") != std::string::npos);
   }
 
-  bool IsTestDisabled(const std::string &test_name) {
+  auto IsTestDisabled(const std::string &test_name) -> bool {
     return test_name.find("disabled") != std::string::npos;
   }
 
-  bool ShouldSkipNonMpiTask(const std::string &test_name) {
-    auto contains_substring = [&](const std::string &substring) {
+  auto ShouldSkipNonMpiTask(const std::string &test_name) -> bool {
+    auto contains_substring = [&](const std::string &substring) -> auto {
       return test_name.find(substring) != std::string::npos;
     };
 

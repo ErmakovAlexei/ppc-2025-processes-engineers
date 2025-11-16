@@ -17,21 +17,22 @@ ErmakovANumbViolElemVecMPI::ErmakovANumbViolElemVecMPI(const InType &in) {
   GetOutput() = 0;
 }
 
-bool ErmakovANumbViolElemVecMPI::ValidationImpl() {
+auto ErmakovANumbViolElemVecMPI::ValidationImpl() -> bool {
   return true;
 }
 
-bool ErmakovANumbViolElemVecMPI::PreProcessingImpl() {
+auto ErmakovANumbViolElemVecMPI::PreProcessingImpl() -> bool {
   return true;
 }
 
-bool ErmakovANumbViolElemVecMPI::RunImpl() {
-  int rank, size;
+auto ErmakovANumbViolElemVecMPI::RunImpl() -> bool {
+  int rank;
+  int size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const std::vector<int> &vec = GetInput();
-  int n = vec.size();
+  const int n = vec.size();
 
   if (n == 0) {
     int zero = 0;
@@ -40,8 +41,8 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
     return true;
   }
 
-  int base = n / size;
-  int rem = n % size;
+  const int base = n / size;
+  const int rem = n % size;
 
   std::vector<int> cnt(size);   // размер блоков
   std::vector<int> disp(size);  // вектор смещений
@@ -55,7 +56,7 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
     shift += cnt[i];
   }
 
-  int local_n = cnt[rank];
+  const int local_n = cnt[rank];
   std::vector<int> initerim_vec(local_n);
 
   if (rank == 0) {
@@ -113,7 +114,7 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
   return true;
 }
 
-bool ErmakovANumbViolElemVecMPI::PostProcessingImpl() {
+auto ErmakovANumbViolElemVecMPI::PostProcessingImpl() -> bool {
   return true;
 }
 

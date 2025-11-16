@@ -1,5 +1,5 @@
 #include "runners/include/runners.hpp"
 
-int main(int argc, char **argv) {
+auto main(int argc, char **argv) -> int {
   return ppc::runners::Init(argc, argv);
 }

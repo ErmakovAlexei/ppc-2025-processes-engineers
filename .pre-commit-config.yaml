@@ -1,1 +1,54 @@
-﻿# Pre-commit hooks for automated formatting and linting# See https://pre-commit.com for more information# See https://pre-commit.com/hooks.html for more hooksrepos:  # C++ formatting with clang-format  - repo: https://github.com/pre-commit/mirrors-clang-format    rev: v21.1.2    hooks:      - id: clang-format        files: \.(cpp|hpp|c|h)$        exclude: ^(3rdparty/|build.*/|install/)        args: [--style=file]  # CMake formatting  - repo: https://github.com/cheshirekow/cmake-format-precommit    rev: v0.6.13    hooks:      - id: cmake-format        files: \.(cmake|CMakeLists\.txt)$        exclude: ^(3rdparty/|build.*/|install/)  # Ruff Python linter  - repo: https://github.com/charliermarsh/ruff-pre-commit    rev: v0.14.0    hooks:      - id: ruff        args: [--fix]      - id: ruff-format  # Flake8 Python style/lint checker (supplemental to Ruff)  - repo: https://github.com/pycqa/flake8    rev: 7.3.0    hooks:      - id: flake8  # YAML linting  - repo: https://github.com/adrienverge/yamllint.git    rev: v1.37.1    hooks:      - id: yamllint  # Shell script linting with shellcheck  - repo: https://github.com/koalaman/shellcheck-precommit    rev: v0.11.0    hooks:      - id: shellcheck        files: \.sh$# Configurationdefault_stages: [pre-commit]fail_fast: false
+﻿repos:
+  # ------------------------------
+  # C/C++: clang-tidy
+  # ------------------------------
+  - repo: local
+    hooks:
+      - id: clang-tidy
+        name: clang-tidy
+        entry: "C:/Progra~1/LLVM/bin/clang-tidy.exe"
+        language: system
+        args:
+          - "-p=build"
+          - "--fix"
+          - "--format-style=file"
+          - "--warnings-as-errors=*"
+        files: \.(c|cpp|cc|cxx|h|hpp|hxx)$
+
+      - id: clang-format
+        name: clang-format
+        entry: "C:/Progra~1/LLVM/bin/clang-format.exe"
+        language: system
+        args:
+          - "-i"
+          - "--style=file"
+        files: \.(c|cpp|cc|cxx|h|hpp|hxx)$
+
+  # ------------------------------
+  # Python: ruff
+  # ------------------------------
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.288
+    hooks:
+      - id: ruff
+        args:
+          - "--fix"
+        files: \.py$
+
+  # ------------------------------
+  # Python: flake8
+  # ------------------------------
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        files: \.py$
+
+  # ------------------------------
+  # YAML: yamllint
+  # ------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        files: \.(yaml|yml)$

@@ -14,7 +14,7 @@
 
 namespace ppc::performance {
 
-inline double DefaultTimer() {
+inline auto DefaultTimer() -> double {
   return -1.0;
 }
 
@@ -47,7 +47,7 @@ class Perf {
   void PipelineRun(const PerfAttr &perf_attr) {
     perf_results_.type_of_running = PerfResults::TypeOfRunning::kPipeline;
 
-    CommonRun(perf_attr, [&] {
+    CommonRun(perf_attr, [&] -> auto {
       task_->Validation();
       task_->PreProcessing();
       task_->Run();
@@ -60,7 +60,7 @@ class Perf {
 
     task_->Validation();
     task_->PreProcessing();
-    CommonRun(perf_attr, [&] { task_->Run(); }, perf_results_);
+    CommonRun(perf_attr, [&] -> auto { task_->Run(); }, perf_results_);
     task_->PostProcessing();
 
     task_->Validation();
@@ -99,7 +99,7 @@ class Perf {
   }
   /// @brief Retrieves the performance test results.
   /// @return The latest PerfResults structure.
-  [[nodiscard]] PerfResults GetPerfResults() const {
+  [[nodiscard]] auto GetPerfResults() const -> PerfResults {
     return perf_results_;
   }
 
@@ -116,7 +116,7 @@ class Perf {
   }
 };
 
-inline std::string GetStringParamName(PerfResults::TypeOfRunning type_of_running) {
+inline auto GetStringParamName(PerfResults::TypeOfRunning type_of_running) -> std::string {
   if (type_of_running == PerfResults::TypeOfRunning::kTaskRun) {
     return "task_run";
   }

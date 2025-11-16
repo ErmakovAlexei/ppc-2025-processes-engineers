@@ -5,7 +5,6 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
-#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -47,7 +46,7 @@ const TaskMappingArray kTaskTypeMappings = {{{TypeOfTask::kALL, "all"},
                                              {TypeOfTask::kSTL, "stl"},
                                              {TypeOfTask::kTBB, "tbb"}}};
 
-inline std::string TypeOfTaskToString(TypeOfTask type) {
+inline auto TypeOfTaskToString(TypeOfTask type) -> std::string {
   for (const auto &[key, value] : kTaskTypeMappings) {
     if (key == type) {
       return value;
@@ -67,7 +66,7 @@ enum class StatusOfTask : uint8_t {
 /// @brief Returns a string representation of the task status.
 /// @param status_of_task Task status (enabled or disabled).
 /// @return "enabled" if the task is enabled, otherwise "disabled".
-inline std::string GetStringTaskStatus(StatusOfTask status_of_task) {
+inline auto GetStringTaskStatus(StatusOfTask status_of_task) -> std::string {
   if (status_of_task == StatusOfTask::kDisabled) {
     return "disabled";
   }
@@ -79,7 +78,7 @@ inline std::string GetStringTaskStatus(StatusOfTask status_of_task) {
 /// @param settings_file_path Path to the JSON file containing task type strings.
 /// @return Formatted string combining the task type and its corresponding value from the file.
 /// @throws std::runtime_error If the file cannot be opened.
-inline std::string GetStringTaskType(TypeOfTask type_of_task, const std::string &settings_file_path) {
+inline auto GetStringTaskType(TypeOfTask type_of_task, const std::string &settings_file_path) -> std::string {
   std::ifstream file(settings_file_path);
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open " + settings_file_path);
@@ -106,7 +105,7 @@ class Task {
  public:
   /// @brief Validates input data and task attributes before execution.
   /// @return True if validation is successful.
-  virtual bool Validation() final {
+  virtual auto Validation() -> bool final {
     if (stage_ == PipelineStage::kNone || stage_ == PipelineStage::kDone) {
       stage_ = PipelineStage::kValidation;
     } else {
@@ -118,7 +117,7 @@ class Task {
 
   /// @brief Performs preprocessing on the input data.
   /// @return True if preprocessing is successful.
-  virtual bool PreProcessing() final {
+  virtual auto PreProcessing() -> bool final {
     if (stage_ == PipelineStage::kValidation) {
       stage_ = PipelineStage::kPreProcessing;
     } else {
@@ -133,7 +132,7 @@ class Task {
 
   /// @brief Executes the main logic of the task.
   /// @return True if execution is successful.
-  virtual bool Run() final {
+  virtual auto Run() -> bool final {
     if (stage_ == PipelineStage::kPreProcessing || stage_ == PipelineStage::kRun) {
       stage_ = PipelineStage::kRun;
     } else {
@@ -145,7 +144,7 @@ class Task {
 
   /// @brief Performs postprocessing on the output data.
   /// @return True if postprocessing is successful.
-  virtual bool PostProcessing() final {
+  virtual auto PostProcessing() -> bool final {
     if (stage_ == PipelineStage::kRun) {
       stage_ = PipelineStage::kDone;
     } else {
@@ -160,7 +159,7 @@ class Task {
 
   /// @brief Returns the current testing mode.
   /// @return Reference to the current StateOfTesting.
-  StateOfTesting &GetStateOfTesting() {
+  auto GetStateOfTesting() -> StateOfTesting & {
     return state_of_testing_;
   }
 
@@ -172,31 +171,31 @@ class Task {
 
   /// @brief Returns the dynamic task type.
   /// @return Current dynamic task type.
-  [[nodiscard]] TypeOfTask GetDynamicTypeOfTask() const {
+  [[nodiscard]] auto GetDynamicTypeOfTask() const -> TypeOfTask {
     return type_of_task_;
   }
 
   /// @brief Returns the current task status.
   /// @return Task status (enabled or disabled).
-  [[nodiscard]] StatusOfTask GetStatusOfTask() const {
+  [[nodiscard]] auto GetStatusOfTask() const -> StatusOfTask {
     return status_of_task_;
   }
 
   /// @brief Returns the static task type.
   /// @return Static task type (default: kUnknown).
-  static constexpr TypeOfTask GetStaticTypeOfTask() {
+  static constexpr auto GetStaticTypeOfTask() -> TypeOfTask {
     return TypeOfTask::kUnknown;
   }
 
   /// @brief Returns a reference to the input data.
   /// @return Reference to the task's input data.
-  InType &GetInput() {
+  auto GetInput() -> InType & {
     return input_;
   }
 
   /// @brief Returns a reference to the output data.
   /// @return Reference to the task's output data.
-  OutType &GetOutput() {
+  auto GetOutput() -> OutType & {
     return output_;
   }
 
@@ -240,19 +239,19 @@ class Task {
 
   /// @brief User-defined validation logic.
   /// @return True if validation is successful.
-  virtual bool ValidationImpl() = 0;
+  virtual auto ValidationImpl() -> bool = 0;
 
   /// @brief User-defined preprocessing logic.
   /// @return True if preprocessing is successful.
-  virtual bool PreProcessingImpl() = 0;
+  virtual auto PreProcessingImpl() -> bool = 0;
 
   /// @brief User-defined task execution logic.
   /// @return True if a run is successful.
-  virtual bool RunImpl() = 0;
+  virtual auto RunImpl() -> bool = 0;
 
   /// @brief User-defined postprocessing logic.
   /// @return True if postprocessing is successful.
-  virtual bool PostProcessingImpl() = 0;
+  virtual auto PostProcessingImpl() -> bool = 0;
 
  private:
   InType input_{};
@@ -283,7 +282,7 @@ using TaskPtr = std::shared_ptr<Task<InType, OutType>>;
 /// @param in Input to pass to the task constructor.
 /// @return Shared a pointer to the newly created task.
 template <typename TaskType, typename InType>
-std::shared_ptr<TaskType> TaskGetter(const InType &in) {
+auto TaskGetter(const InType &in) -> std::shared_ptr<TaskType> {
   return std::make_shared<TaskType>(in);
 }
 

@@ -72,7 +72,7 @@ void WorkerTestFailurePrinter::PrintProcessRank() {
 }
 
 namespace {
-int RunAllTests() {
+auto RunAllTests() -> int {
   auto status = RUN_ALL_TESTS();
   if (ppc::util::DestructorFailureFlag::Get()) {
     throw std::runtime_error(
@@ -115,7 +115,7 @@ void SyncGTestFilter() {
   ::testing::GTEST_FLAG(filter) = filter;
 }
 
-bool HasFlag(int argc, char **argv, std::string_view flag) {
+auto HasFlag(int argc, char **argv, std::string_view flag) -> bool {
   for (int i = 1; i < argc; ++i) {
     if (argv[i] != nullptr && std::string_view(argv[i]) == flag) {
       return true;
@@ -124,7 +124,7 @@ bool HasFlag(int argc, char **argv, std::string_view flag) {
   return false;
 }
 
-int RunAllTestsSafely() {
+auto RunAllTestsSafely() -> int {
   try {
     return RunAllTests();
   } catch (const std::exception &e) {
@@ -139,7 +139,7 @@ int RunAllTestsSafely() {
 }
 }  // namespace
 
-int Init(int argc, char **argv) {
+auto Init(int argc, char **argv) -> int {
   const int init_res = MPI_Init(&argc, &argv);
   if (init_res != MPI_SUCCESS) {
     std::cerr << std::format("[  ERROR  ] MPI_Init failed with code {}", init_res) << '\n';
@@ -148,7 +148,7 @@ int Init(int argc, char **argv) {
   }
 
   // Limit the number of threads in TBB
-  tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
+  const tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
 
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -177,9 +177,9 @@ int Init(int argc, char **argv) {
   return status;
 }
 
-int SimpleInit(int argc, char **argv) {
+auto SimpleInit(int argc, char **argv) -> int {
   // Limit the number of threads in TBB
-  tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
+  const tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
 
   testing::InitGoogleTest(&argc, argv);
   return RunAllTests();

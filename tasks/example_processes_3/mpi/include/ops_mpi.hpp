@@ -7,16 +7,16 @@ namespace nesterov_a_test_task_processes_3 {
 
 class NesterovATestTaskMPI : public BaseTask {
  public:
-  static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
+  static constexpr auto GetStaticTypeOfTask() -> ppc::task::TypeOfTask {
     return ppc::task::TypeOfTask::kMPI;
   }
   explicit NesterovATestTaskMPI(const InType &in);
 
  private:
-  bool ValidationImpl() override;
-  bool PreProcessingImpl() override;
-  bool RunImpl() override;
-  bool PostProcessingImpl() override;
+  auto ValidationImpl() -> bool override;
+  auto PreProcessingImpl() -> bool override;
+  auto RunImpl() -> bool override;
+  auto PostProcessingImpl() -> bool override;
 };
 
 }  // namespace nesterov_a_test_task_processes_3

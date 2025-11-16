@@ -11,19 +11,19 @@ namespace ermakov_a_numb_viol_elem_vec {
 
 class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const int kCount_ = 100000;
-  InType input_data_{};
+  InType input_data_;
 
   void SetUp() override {
     input_data_.resize(kCount_);
-    std::iota(input_data_.begin(), input_data_.end(), 0);
+    std::ranges::iota(input_data_, 0);
     input_data_[kCount_ / 2] = -1;
   }
 
-  bool CheckTestOutputData(OutType &output_data) final {
+  auto CheckTestOutputData(OutType &output_data) -> bool final {
     return output_data >= 0;
   }
 
-  InType GetTestInputData() final {
+  auto GetTestInputData() -> InType final {
     return input_data_;
   }
 };

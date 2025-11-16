@@ -1,7 +1,6 @@
 #include "ermakov_a_numb_viol_elem_vec/seq/include/ops_seq.hpp"
 
 #include <numeric>
-#include <random>
 #include <vector>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
@@ -15,17 +14,17 @@ ErmakovANumbViolElemVecSEQ::ErmakovANumbViolElemVecSEQ(const InType &in) {
   GetOutput() = 0;
 }
 
-bool ErmakovANumbViolElemVecSEQ::ValidationImpl() {
+auto ErmakovANumbViolElemVecSEQ::ValidationImpl() -> bool {
   return true;
 }
 
-bool ErmakovANumbViolElemVecSEQ::PreProcessingImpl() {
+auto ErmakovANumbViolElemVecSEQ::PreProcessingImpl() -> bool {
   return true;
 }
 
-bool ErmakovANumbViolElemVecSEQ::RunImpl() {
+auto ErmakovANumbViolElemVecSEQ::RunImpl() -> bool {
   const auto &vec = GetInput();
-  int n = static_cast<int>(vec.size());
+  const int n = static_cast<int>(vec.size());
   if (n <= 0) {
     GetOutput() = 0;
     return true;
@@ -42,7 +41,7 @@ bool ErmakovANumbViolElemVecSEQ::RunImpl() {
   return true;
 }
 
-bool ErmakovANumbViolElemVecSEQ::PostProcessingImpl() {
+auto ErmakovANumbViolElemVecSEQ::PostProcessingImpl() -> bool {
   return true;
 }
 

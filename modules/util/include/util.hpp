@@ -5,14 +5,12 @@
 #include <atomic>
 #include <cctype>
 #include <cstdint>
-#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>
-#include <typeinfo>
 #ifdef __GNUG__
 #  include <cxxabi.h>
 #endif
@@ -56,7 +54,7 @@ class DestructorFailureFlag {
 
   /// @brief Checks if a destructor failure was recorded.
   /// @return True if failure occurred, false otherwise.
-  static bool Get() {
+  static auto Get() -> bool {
     return failure_flag.load();
   }
 
@@ -66,14 +64,14 @@ class DestructorFailureFlag {
 
 enum class GTestParamIndex : uint8_t { kTaskGetter, kNameTest, kTestParams };
 
-std::string GetAbsoluteTaskPath(const std::string &id_path, const std::string &relative_path);
-int GetNumThreads();
-int GetNumProc();
-double GetTaskMaxTime();
-double GetPerfMaxTime();
+auto GetAbsoluteTaskPath(const std::string &id_path, const std::string &relative_path) -> std::string;
+auto GetNumThreads() -> int;
+auto GetNumProc() -> int;
+auto GetTaskMaxTime() -> double;
+auto GetPerfMaxTime() -> double;
 
 template <typename T>
-std::string GetNamespace() {
+auto GetNamespace() -> std::string {
   std::string name = typeid(T).name();
 #ifdef __GNUC__
   int status = 0;
@@ -95,17 +93,17 @@ std::string GetNamespace() {
   return (pos != std::string::npos) ? name.substr(0, pos) : std::string{};
 }
 
-inline std::shared_ptr<nlohmann::json> InitJSONPtr() {
+inline auto InitJSONPtr() -> std::shared_ptr<nlohmann::json> {
   return std::make_shared<nlohmann::json>();
 }
 
-bool IsUnderMpirun();
+auto IsUnderMpirun() -> bool;
 
 namespace test {
 
-[[nodiscard]] inline std::string SanitizeToken(std::string_view token_sv) {
+[[nodiscard]] inline auto SanitizeToken(std::string_view token_sv) -> std::string {
   std::string token{token_sv};
-  auto is_allowed = [](char c) {
+  auto is_allowed = [](char c) -> bool {
     return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-' || c == '.';
   };
   std::ranges::replace(token, ' ', '_');
@@ -123,7 +121,7 @@ class ScopedPerTestEnv {
       : set_uid_("PPC_TEST_UID", token), set_tmp_("PPC_TEST_TMPDIR", CreateTmpDir(token)) {}
 
  private:
-  static std::string CreateTmpDir(const std::string &token) {
+  static auto CreateTmpDir(const std::string &token) -> std::string {
     namespace fs = std::filesystem;
     auto make_rank_suffix = []() -> std::string {
       // Derive rank from common MPI env vars without including MPI headers
@@ -148,7 +146,7 @@ class ScopedPerTestEnv {
   env::detail::set_scoped_environment_variable set_tmp_;
 };
 
-[[nodiscard]] inline std::string MakeCurrentGTestToken(std::string_view fallback_name) {
+[[nodiscard]] inline auto MakeCurrentGTestToken(std::string_view fallback_name) -> std::string {
   const auto *unit = ::testing::UnitTest::GetInstance();
   const auto *info = (unit != nullptr) ? unit->current_test_info() : nullptr;
   std::ostringstream os;
@@ -160,7 +158,7 @@ class ScopedPerTestEnv {
   return SanitizeToken(os.str());
 }
 
-inline ScopedPerTestEnv MakePerTestEnvForCurrentGTest(std::string_view fallback_name) {
+inline auto MakePerTestEnvForCurrentGTest(std::string_view fallback_name) -> ScopedPerTestEnv {
   return ScopedPerTestEnv(MakeCurrentGTestToken(fallback_name));
 }
 
