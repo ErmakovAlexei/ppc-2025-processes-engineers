@@ -65,9 +65,4 @@ if __name__ == "__main__":
 
     for index, num_students in enumerate(list_students):
         csv_path = path_to_results / f"variants_group_{index + 1}.csv"
-        generate_group_table(
-            num_tasks,
-            num_students,
-            num_variants,
-            csv_path.as_posix()
-        )
+        generate_group_table(num_tasks, num_students, num_variants, csv_path.as_posix())

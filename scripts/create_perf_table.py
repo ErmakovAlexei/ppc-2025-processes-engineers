@@ -253,8 +253,7 @@ for line in logs_lines:
             result_tables[perf_type] = {}
         if task_name not in result_tables[perf_type]:
             result_tables[perf_type][task_name] = {
-                ttype: -1.0
-                for ttype in list_of_type_of_tasks
+                ttype: -1.0 for ttype in list_of_type_of_tasks
             }
 
         result_tables[perf_type][task_name][task_type] = perf_time

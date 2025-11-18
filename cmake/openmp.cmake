@@ -28,8 +28,8 @@ function(ppc_link_openmp exec_func_lib)
   if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     # Для Clang-cl на Windows
     target_compile_options(${exec_func_lib} PUBLIC /openmp)
-    target_link_libraries(${exec_func_lib} PUBLIC
-      "C:/Program Files/LLVM/lib/libomp.lib")
+    target_link_libraries(${exec_func_lib}
+                          PUBLIC "C:/Program Files/LLVM/lib/libomp.lib")
   elseif(MSVC)
     # Для обычного MSVC
     target_compile_options(${exec_func_lib} PUBLIC /openmp)

@@ -100,14 +100,10 @@ class PPCRunner:
             cmd_str = " ".join(shlex.quote(part) for part in command)
             print("Executing:", cmd_str)
 
-        result = subprocess.run(
-            command, shell=False, env=self.__ppc_env
-        )
+        result = subprocess.run(command, shell=False, env=self.__ppc_env)
 
         if result.returncode != 0:
-            raise Exception(
-                f"Subprocess return {result.returncode}."
-            )
+            raise Exception(f"Subprocess return {result.returncode}.")
 
     def __detect_mpi_impl(self):
         """Detect MPI implementation and return (env_mode, np_flag).

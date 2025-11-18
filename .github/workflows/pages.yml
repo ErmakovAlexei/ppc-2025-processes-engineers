@@ -1,4 +1,4 @@
-﻿name: Pages
+name: Pages
 
 on:
   workflow_call:
@@ -32,8 +32,7 @@ jobs:
 
   build-sphinx:
     runs-on: ubuntu-24.04
-    needs:
-      - build-doxygen-xml
+    needs: [build-doxygen-xml]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -118,9 +117,7 @@ jobs:
 
   deploy-pages:
     if: github.ref == 'refs/heads/master'
-    needs:
-      - build-sphinx
-      - build-scoreboard
+    needs: [build-sphinx, build-scoreboard]
     runs-on: ubuntu-24.04
     environment:
       name: github-pages

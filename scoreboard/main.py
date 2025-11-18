@@ -216,9 +216,7 @@ def _find_performance_max(points_info, task_type: str) -> int:
     return 0
 
 
-def _calc_perf_points_from_efficiency(
-    efficiency_str: str, max_points: int
-) -> float:
+def _calc_perf_points_from_efficiency(efficiency_str: str, max_points: int) -> float:
     """Calculate Performance points as a real number (x.yy).
 
     Mapping (eff -> percent of max):
@@ -496,19 +494,12 @@ def _build_rows_for_task_types(
         for task_type in selected_task_types:
             status = directories[dir].get(task_type)
             sol_points, solution_style = get_solution_points_and_style(
-                task_type,
-                status,
-                cfg
+                task_type, status, cfg
             )
 
             task_points = sol_points
             is_cheated, plagiarism_points = check_plagiarism_and_calculate_penalty(
-                dir,
-                task_type,
-                sol_points,
-                plagiarism_cfg,
-                cfg,
-                semester="threads"
+                dir, task_type, sol_points, plagiarism_cfg, cfg, semester="threads"
             )
             task_points += plagiarism_points
 
@@ -521,17 +512,13 @@ def _build_rows_for_task_types(
 
             # Calculate deadline penalty points
             deadline_points = calculate_deadline_penalty(
-                dir,
-                task_type,
-                status,
-                deadlines_cfg,
-                tasks_dir
+                dir, task_type, status, deadlines_cfg, tasks_dir
             )
 
             # Report presence: award R only if report.md exists inside the task
             # directory
             report_present = (tasks_dir / dir / "report.md").exists()
-            report_points = (_find_report_max(cfg, task_type) if report_present else 0)
+            report_points = _find_report_max(cfg, task_type) if report_present else 0
 
             # Performance points P for non-seq types, based on efficiency
             perf_max = _find_performance_max(cfg, task_type)

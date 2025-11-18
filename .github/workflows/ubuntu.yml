@@ -1,4 +1,4 @@
-﻿name: GCC/Clang Build & Test
+name: GCC/Clang Build & Test
 
 on:
   workflow_call:
