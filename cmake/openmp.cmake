@@ -25,19 +25,20 @@ endfunction()
 
 # Функция для линковки с OpenMP
 function(ppc_link_openmp exec_func_lib)
-  if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    # Для Clang-cl на Windows
-    target_compile_options(${exec_func_lib} PUBLIC /openmp)
-    target_link_libraries(${exec_func_lib}
-                          PUBLIC "C:/Program Files/LLVM/lib/libomp.lib")
-  elseif(MSVC)
-    # Для обычного MSVC
+  if(MSVC AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    # MSVC
     target_compile_options(${exec_func_lib} PUBLIC /openmp)
     find_package(OpenMP REQUIRED)
     target_link_libraries(${exec_func_lib} PUBLIC OpenMP::OpenMP_CXX)
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
+    # Clang-cl на Windows
+    target_compile_options(${exec_func_lib} PUBLIC /openmp)
+    target_link_libraries(${exec_func_lib}
+                          PUBLIC "C:/Program Files/LLVM/lib/libomp.lib")
   else()
-    # Для Linux / Unix
+    # Linux / Unix
     find_package(OpenMP REQUIRED)
+    target_compile_options(${exec_func_lib} PUBLIC ${OpenMP_CXX_FLAGS})
     target_link_libraries(${exec_func_lib} PUBLIC OpenMP::OpenMP_CXX)
   endif()
 endfunction()
