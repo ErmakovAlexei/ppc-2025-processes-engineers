@@ -41,43 +41,58 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
 
   int base = n / size;
   int rem = n % size;
+
   std::vector<int> counts(size);
   std::vector<int> displs(size);
-  int shift = 0;
-  for (int i = 0; i < size; ++i) {
+
+  int offset = 0;
+  for (int i = 0; i < size; i++) {
     counts[i] = base;
     if (i < rem) {
       counts[i] += 1;
     }
-    displs[i] = shift;
-    shift += counts[i];
+    displs[i] = offset;
+    offset += counts[i];
   }
 
   int local_n = counts[rank];
   std::vector<int> local_vec(local_n);
 
   if (rank == 0) {
+    std::vector<MPI_Request> reqs;
+    reqs.reserve(size)
+
+        for (int p = 1; p < size; p++) {
+      if (counts[p] > 0) {
+        MPI_Request req;
+        MPI_Isend(vec.data() + displs[p], counts[p], MPI_INT, p, 0, MPI_COMM_WORLD, &req);
+        reqs.push_back(req);
+      }
+    }
+
     for (int i = 0; i < local_n; i++) {
       local_vec[i] = vec[i];
     }
-    for (int p = 1; p < size; p++) {
-      if (counts[p] > 0) {
-        MPI_Send(vec.data() + displs[p], counts[p], MPI_INT, p, 0, MPI_COMM_WORLD);
-      }
+
+    if (!reqs.empty()) {
+      MPI_Waitall(static_cast<int>(reqs.size()), reqs.data(), MPI_STATUSES_IGNORE);
     }
-  } else if (local_n > 0) {
-    MPI_Recv(local_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+  } else {
+    if (local_n > 0) {
+      MPI_Request req;
+      MPI_Irecv(local_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, &req);
+      MPI_Wait(&req, MPI_STATUS_IGNORE);
+    }
   }
 
   int local_viol = 0;
-  for (int i = 0; i + 1 < local_n; ++i) {
+  for (int i = 0; i + 1 < local_n; i++) {
     if (local_vec[i] > local_vec[i + 1]) {
       local_viol++;
     }
   }
 
-  int border = 0;
-  int left_last = 0;
   int my_first = 0;
   int my_last = 0;
 
@@ -86,27 +101,49 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
     my_last = local_vec[local_n - 1];
   }
 
-  if (size > 1) {
-    if (rank % 2 == 0) {
-      if (rank < size - 1 && local_n > 0) {
-        MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
-      }
-      if (rank > 0) {
-        MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        if (local_n > 0 && left_last > my_first) {
-          border = 1;
-        }
-      }
-    } else {
-      if (rank > 0) {
-        MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        if (local_n > 0 && left_last > my_first) {
-          border = 1;
-        }
-      }
-      if (rank < size - 1 && local_n > 0) {
-        MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
-      }
+  int send_to = -1;
+  int recv_from = -1;
+
+  for (int i = rank - 1; i >= 0; --i) {
+    if (counts[i] > 0) {
+      recv_from = i;
+      break;
+    }
+  }
+
+  for (int i = rank + 1; i < size; ++i) {
+    if (counts[i] > 0) {
+      send_to = i;
+      break;
+    }
+  }
+
+  int send_val = 0;
+  if (local_n > 0) {
+    send_val = my_last;
+  }
+
+  int recv_val = 0;
+
+  MPI_Request reqs2[2];
+  int reqC = 0;
+
+  if (send_to != -1) {
+    MPI_Isend(&send_val, 1, MPI_INT, send_to, 1, MPI_COMM_WORLD, &reqs2[reqC++]);
+  }
+
+  if (recv_from != -1) {
+    MPI_Irecv(&recv_val, 1, MPI_INT, recv_from, 1, MPI_COMM_WORLD, &reqs2[reqC++]);
+  }
+
+  if (reqC > 0) {
+    MPI_Waitall(reqC, reqs2, MPI_STATUSES_IGNORE);
+  }
+
+  int border = 0;
+  if (recv_from != -1 && local_n > 0) {
+    if (recv_val > my_first) {
+      border = 1;
     }
   }
 
