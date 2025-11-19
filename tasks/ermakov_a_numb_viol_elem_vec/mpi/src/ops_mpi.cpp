@@ -32,16 +32,15 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
   const std::vector<int> &vec = GetInput();
   int n = vec.size();
 
+  MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
   if (n == 0) {
-    int zero = 0;
-    MPI_Bcast(&zero, 1, MPI_INT, 0, MPI_COMM_WORLD);
     GetOutput() = 0;
     return true;
   }
 
   int base = n / size;
   int rem = n % size;
-
   std::vector<int> counts(size);
   std::vector<int> displs(size);
   int shift = 0;
@@ -66,37 +65,48 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
         MPI_Send(vec.data() + displs[p], counts[p], MPI_INT, p, 0, MPI_COMM_WORLD);
       }
     }
-  } else {
-    if (local_n > 0) {
-      MPI_Recv(local_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
+  } else if (local_n > 0) {
+    MPI_Recv(local_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 
   int local_viol = 0;
-  for (int i = 0; i + 1 < local_n; i++) {
+  for (int i = 0; i + 1 < local_n; ++i) {
     if (local_vec[i] > local_vec[i + 1]) {
-      local_viol += 1;
+      local_viol++;
     }
   }
 
-  int left_last = 0;
+  int border = 0;
+  int left_neighbor_last = 0;
+  int my_first = 0;
   int my_last = 0;
+
   if (local_n > 0) {
+    my_first = local_vec[0];
     my_last = local_vec[local_n - 1];
   }
 
-  if (rank > 0) {
-    MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  }
-
-  if (rank < size - 1) {
-    MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
-  }
-
-  int border = 0;
-  if (local_n > 0 && rank > 0) {
-    if (left_last > local_vec[0]) {
-      border = 1;
+  if (size > 1) {
+    if (rank % 2 == 0) {
+      if (rank < size - 1 && local_n > 0) {
+        MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+      }
+      if (rank > 0) {
+        MPI_Recv(&left_neighbor_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (local_n > 0 && left_neighbor_last > my_first) {
+          border = 1;
+        }
+      }
+    } else {
+      if (rank > 0) {
+        MPI_Recv(&left_neighbor_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (local_n > 0 && left_neighbor_last > my_first) {
+          border = 1;
+        }
+      }
+      if (rank < size - 1 && local_n > 0) {
+        MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+      }
     }
   }
 

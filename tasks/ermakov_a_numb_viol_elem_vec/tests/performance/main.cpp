@@ -15,7 +15,7 @@ class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InTy
 
   void SetUp() override {
     input_data_.resize(kCount_);
-    std::ranges::iota(input_data_, 0);
+    std::iota(input_data_.begin(), input_data_.end(), 1);
     input_data_[kCount_ / 2] = -1;
   }
 
