@@ -92,15 +92,15 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
         MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
       }
       if (rank > 0) {
-        MPI_Recv(&left_neighbor_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        if (local_n > 0 && left_neighbor_last > my_first) {
+        MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (local_n > 0 && left_last > my_first) {
           border = 1;
         }
       }
     } else {
       if (rank > 0) {
-        MPI_Recv(&left_neighbor_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        if (local_n > 0 && left_neighbor_last > my_first) {
+        MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (local_n > 0 && left_last > my_first) {
           border = 1;
         }
       }
