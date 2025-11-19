@@ -78,7 +78,7 @@ auto ErmakovANumbViolElemVecMPI::RunImpl() -> bool {
   int interim_viol = 0;
   for (int i = 0; i + 1 < local_n; ++i) {
     if (initerim_vec[i] > initerim_vec[i + 1]) {
-      ++interim_viol;
+      interim_viol += 1;
     }
   }
 
