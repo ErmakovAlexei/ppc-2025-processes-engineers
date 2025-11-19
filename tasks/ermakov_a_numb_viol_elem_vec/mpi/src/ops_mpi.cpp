@@ -60,9 +60,9 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
 
   if (rank == 0) {
     std::vector<MPI_Request> reqs;
-    reqs.reserve(size)
+    reqs.reserve(size);
 
-        for (int p = 1; p < size; p++) {
+    for (int p = 1; p < size; p++) {
       if (counts[p] > 0) {
         MPI_Request req;
         MPI_Isend(vec.data() + displs[p], counts[p], MPI_INT, p, 0, MPI_COMM_WORLD, &req);
