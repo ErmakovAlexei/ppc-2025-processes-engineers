@@ -55,8 +55,8 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
   }
 
  private:
-  InType input_data_;
-  OutType expected_output_;
+  InType input_data_{};
+  OutType expected_output_{};
 };
 
 namespace {
