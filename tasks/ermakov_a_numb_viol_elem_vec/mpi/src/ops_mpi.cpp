@@ -32,9 +32,9 @@ auto ErmakovANumbViolElemVecMPI::RunImpl() -> bool {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const std::vector<int> &vec = GetInput();
-  const int n = vec.size();
+  const int n = static_cast<int>(vec.size());
 
-  if (n == 0) {
+  if (n <= 0) {
     int zero = 0;
     MPI_Bcast(&zero, 1, MPI_INT, 0, MPI_COMM_WORLD);
     GetOutput() = 0;
@@ -57,11 +57,11 @@ auto ErmakovANumbViolElemVecMPI::RunImpl() -> bool {
   }
 
   const int local_n = cnt[rank];
-  std::vector<int> initerim_vec(local_n);
+  std::vector<int> interim_vec(local_n);
 
   if (rank == 0) {
     if (local_n > 0) {
-      std::copy(vec.begin(), vec.begin() + local_n, initerim_vec.begin());
+      std::copy(vec.begin(), vec.begin() + local_n, interim_vec.begin());
     }
 
     for (int p = 1; p < size; ++p) {
@@ -71,46 +71,42 @@ auto ErmakovANumbViolElemVecMPI::RunImpl() -> bool {
     }
   } else {
     if (local_n > 0) {
-      MPI_Recv(initerim_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(interim_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
   }
 
   int interim_viol = 0;
-  for (int i = 0; i + 1 < local_n; ++i) {
-    if (initerim_vec[i] > initerim_vec[i + 1]) {
+#ifdef _OPENMP
+#  pragma omp parallel for reduction(+ : interim_viol)
+#endif
+  for (int i = 0; i < local_n - 1; ++i) {
+    if (interim_vec[i] > interim_vec[i + 1]) {
       interim_viol += 1;
     }
   }
 
-  int border = 0;  // граничные нарушения
+  int border = 0;
+  int left_last = 0;
 
-  if (rank > 0 && local_n > 0) {
-    int left_last = 0;
-
+  if (rank > 0) {
     MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-    if (rank + 1 < size && cnt[rank + 1] > 0) {
-      int my_last = initerim_vec.back();
-      MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
-    }
-
-    if (left_last > initerim_vec[0]) {
+    if (local_n > 0 && left_last > interim_vec[0]) {
       border = 1;
-    }
-  } else if (rank == 0 && local_n > 0) {
-    if (size > 1 && cnt[1] > 0) {
-      int my_last = initerim_vec.back();
-      MPI_Send(&my_last, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);
     }
   }
 
-  int total_interim_viol = interim_viol + border;
-  int res = 0;
+  if (rank < size - 1 && local_n > 0) {
+    int my_last = interim_vec.back();
+    MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+  }
 
-  MPI_Reduce(&total_interim_viol, &res, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&res, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  int total_local = interim_viol + border;
+  int global_total = 0;
 
-  GetOutput() = res;
+  MPI_Reduce(&total_local, &global_total, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&global_total, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  GetOutput() = global_total;
   return true;
 }
 
