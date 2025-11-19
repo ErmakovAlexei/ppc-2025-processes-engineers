@@ -33,7 +33,7 @@ auto ErmakovANumbViolElemVecSEQ::RunImpl() -> bool {
   int viol = 0;
   for (int i = 0; i + 1 < n; ++i) {
     if (vec[i] > vec[i + 1]) {
-      viol += 1;
+      ++viol;
     }
   }
 

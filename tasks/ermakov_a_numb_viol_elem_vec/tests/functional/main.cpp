@@ -50,7 +50,7 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
 
 namespace {
 
-const std::array<TestType, 7> kTestParam = {
+const std::array<TestType, 8> kTestParam = {
 
     std::make_tuple(std::vector<int>{1, 2, 3, 4, 5}, 0),
 
@@ -59,6 +59,8 @@ const std::array<TestType, 7> kTestParam = {
     std::make_tuple(std::vector<int>{1, 3, 2, 5, 4}, 2),
 
     std::make_tuple(std::vector<int>{7, 7, 7, 7}, 0),
+
+    std::make_tuple(std::vector<int>{1, 2, 1}, 1),
 
     std::make_tuple(std::vector<int>{42}, 0),
 
