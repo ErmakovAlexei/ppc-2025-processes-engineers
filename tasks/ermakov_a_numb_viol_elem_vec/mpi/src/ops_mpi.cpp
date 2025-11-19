@@ -77,7 +77,7 @@ bool ErmakovANumbViolElemVecMPI::RunImpl() {
   }
 
   int border = 0;
-  int left_neighbor_last = 0;
+  int left_last = 0;
   int my_first = 0;
   int my_last = 0;
 
