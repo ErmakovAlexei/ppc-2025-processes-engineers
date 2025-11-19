@@ -15,10 +15,7 @@ def init_cmd_args():
         "--running-type",
         required=True,
         choices=["threads", "processes", "performance"],
-        help=(
-            "Specify the execution mode. Choose 'threads' for multithreading "
-            "or 'processes' for multiprocessing."
-        ),
+        help="Specify the execution mode. Choose 'threads' for multithreading or 'processes' for multiprocessing.",
     )
     parser.add_argument(
         "--additional-mpi-args",
@@ -97,18 +94,14 @@ class PPCRunner:
 
     def __run_exec(self, command):
         if self.verbose:
-            cmd_str = " ".join(shlex.quote(part) for part in command)
-            print("Executing:", cmd_str)
-
+            print("Executing:", " ".join(shlex.quote(part) for part in command))
         result = subprocess.run(command, shell=False, env=self.__ppc_env)
-
         if result.returncode != 0:
             raise Exception(f"Subprocess return {result.returncode}.")
 
     def __detect_mpi_impl(self):
         """Detect MPI implementation and return (env_mode, np_flag).
-        env_mode: 'openmpi' -> use '-x VAR', 'mpich' -> use
-        '-genvlist VAR1,VAR2', 'unknown' -> pass no env flags.
+        env_mode: 'openmpi' -> use '-x VAR', 'mpich' -> use '-genvlist VAR1,VAR2', 'unknown' -> pass no env flags.
         np_flag: '-np' for OpenMPI/unknown, '-n' for MPICH-family.
         """
         probes = (["--version"], ["-V"], ["-v"], ["--help"], ["-help"])
