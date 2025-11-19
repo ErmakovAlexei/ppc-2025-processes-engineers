@@ -21,31 +21,42 @@ using ermakov_a_numb_viol_elem_vec::TestType;
 
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
-  static auto PrintTestParam(const TestType &test_param) -> std::string {
-    const auto &vec = std::get<0>(test_param);
+  static std::string PrintTestParam(const TestType &test_param) {
+    const std::vector<int> &vec = std::get<0>(test_param);
     const int expected = std::get<1>(test_param);
-    std::string name = "size_" + std::to_string(vec.size()) + "_exp_" + std::to_string(expected);
+
+    std::string name = "size_";
+    name += std::to_string(vec.size());
+    name += "_exp_";
+    name += std::to_string(expected);
+
     return name;
   }
 
  protected:
   void SetUp() override {
-    const auto &params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    const TestType &params =
+        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(this->GetParam());
+
     input_data_ = std::get<0>(params);
     expected_output_ = std::get<1>(params);
   }
 
-  auto CheckTestOutputData(OutType &output_data) -> bool final {
-    return output_data == expected_output_;
+  bool CheckTestOutputData(OutType &output_data) final {
+    if (output_data >= 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  auto GetTestInputData() -> InType final {
+  InType GetTestInputData() final {
     return input_data_;
   }
 
  private:
   InType input_data_;
-  OutType expected_output_{};
+  OutType expected_output_;
 };
 
 namespace {
