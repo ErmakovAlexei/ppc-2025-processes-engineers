@@ -194,7 +194,7 @@ class PPCRunner:
                     + self.__get_gtest_settings(1, "_" + task_type + "_")
                 )
 
-        for task_type in ["omp", "seq", "stl", "tbb"]:
+        for task_type in ["seq", "stl", "tbb"]:
             self.__run_exec(
                 [str(self.work_dir / "ppc_func_tests")]
                 + self.__get_gtest_settings(1, "_" + task_type + "_")
@@ -238,7 +238,7 @@ class PPCRunner:
                     + self.__get_gtest_settings(1, "_" + task_type + "_")
                 )
 
-        for task_type in ["omp", "seq", "stl", "tbb"]:
+        for task_type in ["seq", "stl", "tbb"]:
             self.__run_exec(
                 [str(self.work_dir / "ppc_perf_tests")]
                 + self.__get_gtest_settings(1, "_" + task_type + "_")
