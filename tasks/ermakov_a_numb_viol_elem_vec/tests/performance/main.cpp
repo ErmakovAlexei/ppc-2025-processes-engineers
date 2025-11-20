@@ -10,7 +10,7 @@
 namespace ermakov_a_numb_viol_elem_vec {
 
 class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 10;
+  const int kCount_ = 10000000;
   InType input_data_;
 
   void SetUp() override {
