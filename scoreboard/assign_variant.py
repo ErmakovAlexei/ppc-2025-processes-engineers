@@ -125,13 +125,12 @@ if __name__ == "__main__":
         )
         assert v1 == v2, "Normalization should make results identical"
 
-        # different salt → likely different value
         v_other_repo = assign_variant(
             surname="Petrov",
             name="Pyotr",
             patronymic="Petrovich",
             group="MEN-201",
-            repo="learning-process/ppc_2025_fall",
+            repo="learning-process/ppc_2025_fall",  # different salt → likely different value
             num_variants=31,
         )
 

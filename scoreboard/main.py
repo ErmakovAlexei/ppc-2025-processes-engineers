@@ -220,52 +220,41 @@ def _calc_perf_points_from_efficiency(efficiency_str: str, max_points: int) -> f
     """Calculate Performance points as a real number (x.yy).
 
     Mapping (eff -> percent of max):
-        >=50       -> 100
-        [45,50)    -> 90
-        [42,45)    -> 80
-        [40,42)    -> 70
-        [37,40)    -> 60
-        [35,37)    -> 50
-        [32,35)    -> 40
-        [30,32)    -> 30
-        [27,30)    -> 20
-        [25,27)    -> 10
-        <25        -> 0
+      >=50 -> 100; [45,50) -> 90; [42,45) -> 80; [40,42) -> 70; [37,40) -> 60;
+      [35,37) -> 50; [32,35) -> 40; [30,32) -> 30; [27,30) -> 20; [25,27) -> 10; <25 -> 0
     Returns a float rounded to 2 decimals (no ceil).
     """
     if not isinstance(efficiency_str, str) or not efficiency_str.endswith("%"):
         return 0.0
-
     try:
         val = float(efficiency_str.rstrip("%"))
     except Exception:
         return 0.0
-
+    perc = 0.0
     if val >= 50:
         perc = 1.0
-    elif val >= 45:
+    elif 45 <= val < 50:
         perc = 0.9
-    elif val >= 42:
+    elif 42 <= val < 45:
         perc = 0.8
-    elif val >= 40:
+    elif 40 <= val < 42:
         perc = 0.7
-    elif val >= 37:
+    elif 37 <= val < 40:
         perc = 0.6
-    elif val >= 35:
+    elif 35 <= val < 37:
         perc = 0.5
-    elif val >= 32:
+    elif 32 <= val < 35:
         perc = 0.4
-    elif val >= 30:
+    elif 30 <= val < 32:
         perc = 0.3
-    elif val >= 27:
+    elif 27 <= val < 30:
         perc = 0.2
-    elif val >= 25:
+    elif 25 <= val < 27:
         perc = 0.1
     else:
         perc = 0.0
-
     pts = max_points * perc if max_points > 0 else 0.0
-
+    # round to 2 decimals (banker's rounding acceptable here)
     return round(pts, 2)
 
 
@@ -515,8 +504,7 @@ def _build_rows_for_task_types(
                 dir, task_type, status, deadlines_cfg, tasks_dir
             )
 
-            # Report presence: award R only if report.md exists inside the task
-            # directory
+            # Report presence: award R only if report.md exists inside the task directory
             report_present = (tasks_dir / dir / "report.md").exists()
             report_points = _find_report_max(cfg, task_type) if report_present else 0
 
@@ -548,9 +536,7 @@ def _build_rows_for_task_types(
                     "report": report_points,
                 }
             )
-
-            # Total: include Solution + Performance + Report +
-            # Copying penalty (exclude Deadline)
+            # Total: include Solution + Performance + Report + Copying penalty (exclude Deadline)
             total_count += task_points + perf_points + report_points
 
         label_name = _load_student_info_label(dir) or dir
@@ -913,30 +899,23 @@ def main():
             proc_group_headers.append({"type": "seq"})
             group_cells = []
             for ttype in ["mpi", "seq"]:
-                cell, _ = _build_cell(
-                    d,
-                    ttype,
-                    perf_stats,
-                )
+                cell, _ = _build_cell(d, ttype, perf_stats)
                 group_cells.append(cell)
-            # Override displayed points for processes: S under MPI/SEQ
-            # from points-info;
-            # A points under MPI only
+            # Override displayed points for processes: S under MPI/SEQ from points-info; A points under MPI only
             s_mpi, s_seq, a_mpi, r_max = _find_process_points(cfg, n)
             has_mpi = bool(directories[d].get("mpi"))
             has_seq = bool(directories[d].get("seq"))
             report_present = (tasks_dir / d / "report.md").exists()
             group_cells[0]["solution_points"] = s_mpi if has_mpi else 0
             group_cells[1]["solution_points"] = s_seq if has_seq else 0
-            # Calculate Performance P for MPI based on efficiency
-            # and max a_mpi
+            # Calculate Performance P for MPI based on efficiency and max a_mpi
             mpi_eff = group_cells[0].get("efficiency", "N/A")
-            if has_mpi and has_seq:
-                perf_points_mpi = _calc_perf_points_from_efficiency(mpi_eff, a_mpi)
-            else:
-                perf_points_mpi = 0
-            # Display '—' instead of 0 when metrics are absent
-            # (efficiency not a percent)
+            perf_points_mpi = (
+                _calc_perf_points_from_efficiency(mpi_eff, a_mpi)
+                if (has_mpi and has_seq)
+                else 0
+            )
+            # Display '—' instead of 0 when metrics are absent (efficiency not a percent)
             if isinstance(mpi_eff, str) and mpi_eff.endswith("%"):
                 perf_points_mpi_display = perf_points_mpi
             else:
@@ -992,8 +971,7 @@ def main():
             # Do not affect total; sum only existing tasks; report points 0
             proc_r_values.append(0)
 
-    # Label for processes row: show Last, First, Middle on separate lines;
-    # no group number
+    # Label for processes row: show Last, First, Middle on separate lines; no group number
     row_label = "processes"
     row_variant = "?"
     if target_identity:

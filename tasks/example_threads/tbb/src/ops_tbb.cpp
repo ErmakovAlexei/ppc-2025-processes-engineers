@@ -18,16 +18,16 @@ NesterovATestTaskTBB::NesterovATestTaskTBB(const InType &in) {
   GetOutput() = 0;
 }
 
-auto NesterovATestTaskTBB::ValidationImpl() -> bool {
+bool NesterovATestTaskTBB::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-auto NesterovATestTaskTBB::PreProcessingImpl() -> bool {
+bool NesterovATestTaskTBB::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskTBB::RunImpl() -> bool {
+bool NesterovATestTaskTBB::RunImpl() {
   for (InType i = 0; i < GetInput(); i++) {
     for (InType j = 0; j < GetInput(); j++) {
       for (InType k = 0; k < GetInput(); k++) {
@@ -42,13 +42,13 @@ auto NesterovATestTaskTBB::RunImpl() -> bool {
   GetOutput() *= num_threads;
 
   std::atomic<int> counter(0);
-  tbb::parallel_for(0, ppc::util::GetNumThreads(), [&](int /*i*/) -> void { counter++; });
+  tbb::parallel_for(0, ppc::util::GetNumThreads(), [&](int /*i*/) { counter++; });
 
   GetOutput() /= counter;
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskTBB::PostProcessingImpl() -> bool {
+bool NesterovATestTaskTBB::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

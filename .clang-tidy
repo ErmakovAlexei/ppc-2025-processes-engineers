@@ -1,45 +1,45 @@
-Checks:
-  - bugprone-*
-  - cert-dcl50-cpp
-  - cert-dcl58-cpp
-  - cert-env33-c
-  - cert-err34-c
-  - cert-err52-cpp
-  - cert-err60-cpp
-  - cert-flp30-c
-  - cert-mem57-cpp
-  - cert-msc50-cpp
-  - cert-msc51-cpp
-  - cert-oop57-cpp
-  - cert-oop58-cpp
-  - concurrency-*
-  - cppcoreguidelines-*
-  - google-*
-  - llvm-include-order
-  - llvm-namespace-comment
-  - misc-*
-  - modernize-*
-  - mpi-*
-  - openmp-*
-  - performance-*
-  - portability-*
-  - readability-*
-  - -bugprone-casting-through-void
-  - -bugprone-easily-swappable-parameters
-  - -cppcoreguidelines-avoid-magic-numbers
-  - -cppcoreguidelines-non-private-member-variables-in-classes
-  - -cppcoreguidelines-owning-memory
-  - -cppcoreguidelines-pro-bounds-pointer-arithmetic
-  - -cppcoreguidelines-pro-type-reinterpret-cast
-  - -cppcoreguidelines-pro-type-vararg
-  - -cppcoreguidelines-special-member-functions
-  - -misc-const-correctness
-  - -misc-non-private-member-variables-in-classes
-  - -modernize-avoid-c-arrays
-  - -modernize-use-trailing-return-type
-  - -portability-avoid-pragma-once
-  - -portability-template-virtual-member-function
-  - -readability-magic-numbers
+Checks: >
+  bugprone-*,
+  cert-dcl50-cpp,
+  cert-dcl58-cpp,
+  cert-env33-c,
+  cert-err34-c,
+  cert-err52-cpp,
+  cert-err60-cpp,
+  cert-flp30-c,
+  cert-mem57-cpp,
+  cert-msc50-cpp,
+  cert-msc51-cpp,
+  cert-oop57-cpp,
+  cert-oop58-cpp,
+  concurrency-*,
+  cppcoreguidelines-*,
+  google-*,
+  llvm-include-order,
+  llvm-namespace-comment,
+  misc-*,
+  modernize-*,
+  mpi-*,
+  openmp-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-casting-through-void,
+  -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-special-member-functions,
+  -misc-const-correctness,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-avoid-c-arrays,
+  -modernize-use-trailing-return-type,
+  -portability-avoid-pragma-once,
+  -portability-template-virtual-member-function,
+  -readability-magic-numbers
 
 WarningsAsErrors: "*"
 HeaderFilterRegex: '.*/(modules|tasks)/.*'
@@ -93,8 +93,9 @@ CheckOptions:
     value: lower_case
   - key: readability-identifier-naming.IgnoreMainLikeFunctions
     value: 1
+  # Functions with scores beyond 15 are typically flagged as potentially problematic (empirically)
   - key: readability-function-cognitive-complexity.Threshold
-    value: 15
+    value: 15  # default: 25
   - key: readability-identifier-length.MinimumVariableNameLength
     value: 1
   - key: readability-identifier-length.MinimumParameterNameLength

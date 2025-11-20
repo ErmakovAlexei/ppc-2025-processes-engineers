@@ -13,8 +13,7 @@ def get_project_path():
 def generate_group_table(_num_tasks, _num_students, _num_variants, _csv_file):
     if _num_tasks != len(_num_variants):
         raise Exception(
-            f"Count of students: {_num_tasks} != "
-            f"count of list of variants: {len(_num_variants)}"
+            f"Count of students: {_num_tasks} != count of list of variants: {len(_num_variants)}"
         )
 
     list_of_tasks = []
@@ -56,13 +55,13 @@ if __name__ == "__main__":
     # List containing the number of students for each task
     list_students = [29, 10, 40]
 
-    # List containing the number of variants for each task
+    # List containing the number of variants (versions) for each task
     num_variants = [27, 2, 9]
 
-    # Path to results directory for CSV/XLSX files
+    # Overall, `path_to_results` represents the file path leading to a csv's and xlsx's directory
     path_to_results = Path(get_project_path()) / "build" / "variants_results"
     path_to_results.mkdir(parents=True, exist_ok=True)
 
-    for index, num_students in enumerate(list_students):
+    for num_students, index in zip(list_students, range(len(list_students))):
         csv_path = path_to_results / f"variants_group_{index + 1}.csv"
         generate_group_table(num_tasks, num_students, num_variants, csv_path.as_posix())

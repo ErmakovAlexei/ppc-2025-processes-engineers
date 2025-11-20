@@ -165,31 +165,29 @@ for line in logs_lines:
         task_categories[task_name] = "threads"
         tasks_by_category["threads"].add(task_name)
     elif len(new_result):
-        # Extract task name from namespace (e.g., "example_threads"
-        # from "nesterov_a_test_task_threads")
+        # Extract task name from namespace (e.g., "example_threads" from "nesterov_a_test_task_threads")
         full_task_name = new_result[0][0]
         task_category = new_result[0][1]  # "threads" or "processes"
         task_name = f"example_{task_category}"
         perf_type = new_result[0][3]
 
         # no set tracking needed; category mapping below
+
         _ensure_task_tables(result_tables, perf_type, task_name)
         task_categories[task_name] = task_category
         tasks_by_category[task_category].add(task_name)
-
     elif len(simple_result):
-        # Extract task name in the current format (prefix already includes
-        # category suffix)
+        # Extract task name in the current format (prefix already includes category suffix)
         task_name = simple_result[0][0]
         # Infer category by substring
         task_category = "threads" if "threads" in task_name else "processes"
         perf_type = simple_result[0][2]
 
         # no set tracking needed; category mapping below
+
         _ensure_task_tables(result_tables, perf_type, task_name)
         task_categories[task_name] = task_category
         tasks_by_category[task_category].add(task_name)
-
 
 for line in logs_lines:
     # Handle both old format: tasks/task_type/task_name:perf_type:time
@@ -203,16 +201,10 @@ for line in logs_lines:
         task_name = old_result[0][1]
         perf_type = old_result[0][2]
         perf_time = float(old_result[0][3])
-
         if perf_time < 0.001:
-            msg = (
-                f"Performance time = {perf_time} < 0.001 second : "
-                f"for {task_type} - {task_name} - {perf_type}\n"
-            )
+            msg = f"Performance time = {perf_time} < 0.001 second : for {task_type} - {task_name} - {perf_type} \n"
             raise Exception(msg)
-
         result_tables[perf_type][task_name][task_type] = perf_time
-
     elif len(new_result):
         # Extract task details from namespace format
         task_category = new_result[0][1]  # "threads" or "processes"
@@ -222,40 +214,32 @@ for line in logs_lines:
         task_name = f"example_{task_category}"
 
         if perf_time < 0.001:
-            msg = (
-                f"Performance time = {perf_time} < 0.001 second : "
-                f"for {task_type} - {task_name} - {perf_type}\n"
-            )
+            msg = f"Performance time = {perf_time} < 0.001 second : for {task_type} - {task_name} - {perf_type} \n"
             raise Exception(msg)
 
         if task_name in result_tables[perf_type]:
             result_tables[perf_type][task_name][task_type] = perf_time
-
         task_categories[task_name] = task_category
         tasks_by_category[task_category].add(task_name)
-
     elif len(simple_result):
         # Extract details from the simplified pattern (current logs)
         task_name = simple_result[0][0]
+        # Infer category by substring present in task_name
         task_category = "threads" if "threads" in task_name else "processes"
         task_type = simple_result[0][1]
         perf_type = simple_result[0][2]
         perf_time = float(simple_result[0][3])
 
         if perf_time < 0.001:
-            msg = (
-                f"Performance time = {perf_time} < 0.001 second : "
-                f"for {task_type} - {task_name} - {perf_type}\n"
-            )
+            msg = f"Performance time = {perf_time} < 0.001 second : for {task_type} - {task_name} - {perf_type} \n"
             raise Exception(msg)
 
         if perf_type not in result_tables:
             result_tables[perf_type] = {}
         if task_name not in result_tables[perf_type]:
-            result_tables[perf_type][task_name] = {
-                ttype: -1.0 for ttype in list_of_type_of_tasks
-            }
-
+            result_tables[perf_type][task_name] = {}
+            for ttype in list_of_type_of_tasks:
+                result_tables[perf_type][task_name][ttype] = -1.0
         result_tables[perf_type][task_name][task_type] = perf_time
         task_categories[task_name] = task_category
         tasks_by_category[task_category].add(task_name)

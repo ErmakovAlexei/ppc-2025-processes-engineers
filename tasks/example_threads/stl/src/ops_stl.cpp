@@ -16,16 +16,16 @@ NesterovATestTaskSTL::NesterovATestTaskSTL(const InType &in) {
   GetOutput() = 0;
 }
 
-auto NesterovATestTaskSTL::ValidationImpl() -> bool {
+bool NesterovATestTaskSTL::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-auto NesterovATestTaskSTL::PreProcessingImpl() -> bool {
+bool NesterovATestTaskSTL::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskSTL::RunImpl() -> bool {
+bool NesterovATestTaskSTL::RunImpl() {
   for (InType i = 0; i < GetInput(); i++) {
     for (InType j = 0; j < GetInput(); j++) {
       for (InType k = 0; k < GetInput(); k++) {
@@ -42,7 +42,7 @@ auto NesterovATestTaskSTL::RunImpl() -> bool {
 
   std::atomic<int> counter(0);
   for (int i = 0; i < num_threads; i++) {
-    threads[i] = std::thread([&]() -> void { counter++; });
+    threads[i] = std::thread([&]() { counter++; });
     threads[i].join();
   }
 
@@ -50,7 +50,7 @@ auto NesterovATestTaskSTL::RunImpl() -> bool {
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskSTL::PostProcessingImpl() -> bool {
+bool NesterovATestTaskSTL::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

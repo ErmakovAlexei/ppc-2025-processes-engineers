@@ -14,16 +14,16 @@ NesterovATestTaskSEQ::NesterovATestTaskSEQ(const InType &in) {
   GetOutput() = 0;
 }
 
-auto NesterovATestTaskSEQ::ValidationImpl() -> bool {
+bool NesterovATestTaskSEQ::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-auto NesterovATestTaskSEQ::PreProcessingImpl() -> bool {
+bool NesterovATestTaskSEQ::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskSEQ::RunImpl() -> bool {
+bool NesterovATestTaskSEQ::RunImpl() {
   if (GetInput() == 0) {
     return false;
   }
@@ -52,7 +52,7 @@ auto NesterovATestTaskSEQ::RunImpl() -> bool {
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskSEQ::PostProcessingImpl() -> bool {
+bool NesterovATestTaskSEQ::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

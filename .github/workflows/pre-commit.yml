@@ -18,15 +18,12 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-
       - name: Setup environment
         run: |
           python3 -m pip install -r requirements.txt --break-system-packages --ignore-installed
-
       - name: Configure git safe directory
         run: |
           git config --global --add safe.directory '*'
-
       - name: Run pre-commit checks
         run: |
           FROM_REF="${{ github.base_ref || 'HEAD~1' }}"

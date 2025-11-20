@@ -6,7 +6,6 @@ ignore:
   - "modules/util/include/perf_test_util.hpp"
   - "modules/util/include/func_test_util.hpp"
   - "modules/util/src/func_test_util.cpp"
-
 coverage:
   status:
     project:

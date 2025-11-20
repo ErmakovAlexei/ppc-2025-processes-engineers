@@ -16,16 +16,16 @@ NesterovATestTaskMPI::NesterovATestTaskMPI(const InType &in) {
   GetOutput() = 0;
 }
 
-auto NesterovATestTaskMPI::ValidationImpl() -> bool {
+bool NesterovATestTaskMPI::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-auto NesterovATestTaskMPI::PreProcessingImpl() -> bool {
+bool NesterovATestTaskMPI::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskMPI::RunImpl() -> bool {
+bool NesterovATestTaskMPI::RunImpl() {
   auto input = GetInput();
   if (input == 0) {
     return false;
@@ -64,7 +64,7 @@ auto NesterovATestTaskMPI::RunImpl() -> bool {
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskMPI::PostProcessingImpl() -> bool {
+bool NesterovATestTaskMPI::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

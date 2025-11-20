@@ -25,7 +25,7 @@ namespace nesterov_a_test_task_threads {
 
 class NesterovARunFuncTestsThreads : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
-  static auto PrintTestParam(const TestType &test_param) -> std::string {
+  static std::string PrintTestParam(const TestType &test_param) {
     return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
   }
 
@@ -37,7 +37,7 @@ class NesterovARunFuncTestsThreads : public ppc::util::BaseRunFuncTests<InType, 
     std::vector<uint8_t> img;
     // Read image in RGB to ensure consistent channel count
     {
-      const std::string abs_path = ppc::util::GetAbsoluteTaskPath(std::string(PPC_ID_example_threads), "pic.jpg");
+      std::string abs_path = ppc::util::GetAbsoluteTaskPath(std::string(PPC_ID_example_threads), "pic.jpg");
       auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
       if (data == nullptr) {
         throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
@@ -50,15 +50,15 @@ class NesterovARunFuncTestsThreads : public ppc::util::BaseRunFuncTests<InType, 
       }
     }
 
-    const TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
   }
 
-  auto CheckTestOutputData(OutType &output_data) -> bool final {
+  bool CheckTestOutputData(OutType &output_data) final {
     return (input_data_ == output_data);
   }
 
-  auto GetTestInputData() -> InType final {
+  InType GetTestInputData() final {
     return input_data_;
   }
 

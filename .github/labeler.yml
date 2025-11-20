@@ -28,12 +28,12 @@
       - any-glob-to-any-file:
           - "tasks/**/tbb"
 
-"task":
+task:
   - changed-files:
       - any-glob-to-any-file:
           - "tasks/**"
 
-"ci":
+ci:
   - changed-files:
       - any-glob-to-any-file:
           - ".github/**"
@@ -64,7 +64,7 @@
       - any-glob-to-any-file:
           - "3rdparty/**"
 
-"infrastructure":
+infrastructure:
   - changed-files:
       - any-glob-to-any-file:
           - "scripts/**"
@@ -77,18 +77,18 @@
           - "codecov.yml"
           - "setup.cfg"
 
-"python":
+python:
   - changed-files:
       - any-glob-to-any-file:
           - "**/requirements.txt"
 
-"docs":
+docs:
   - changed-files:
       - any-glob-to-any-file:
           - "docs/**"
           - "README.md"
 
-"scoreboard":
+scoreboard:
   - changed-files:
       - any-glob-to-any-file:
           - "scoreboard/**"

@@ -12,28 +12,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: >-
     ${{ github.ref != 'refs/heads/master' &&
-       github.event_name != 'merge_group' &&
-       !startsWith(github.ref, 'refs/heads/gh-readonly-queue') }}
+        github.event_name != 'merge_group' &&
+        !startsWith(github.ref, 'refs/heads/gh-readonly-queue') }}
 
 jobs:
   pre-commit:
     uses: ./.github/workflows/pre-commit.yml
-
   ubuntu:
     needs:
       - pre-commit
     uses: ./.github/workflows/ubuntu.yml
-
   mac:
     needs:
       - pre-commit
     uses: ./.github/workflows/mac.yml
-
   windows:
     needs:
       - pre-commit
     uses: ./.github/workflows/windows.yml
-
   perf:
     needs:
       - ubuntu

@@ -15,16 +15,16 @@ NesterovATestTaskOMP::NesterovATestTaskOMP(const InType &in) {
   GetOutput() = 0;
 }
 
-auto NesterovATestTaskOMP::ValidationImpl() -> bool {
+bool NesterovATestTaskOMP::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-auto NesterovATestTaskOMP::PreProcessingImpl() -> bool {
+bool NesterovATestTaskOMP::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskOMP::RunImpl() -> bool {
+bool NesterovATestTaskOMP::RunImpl() {
   for (InType i = 0; i < GetInput(); i++) {
     for (InType j = 0; j < GetInput(); j++) {
       for (InType k = 0; k < GetInput(); k++) {
@@ -46,7 +46,7 @@ auto NesterovATestTaskOMP::RunImpl() -> bool {
   return GetOutput() > 0;
 }
 
-auto NesterovATestTaskOMP::PostProcessingImpl() -> bool {
+bool NesterovATestTaskOMP::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

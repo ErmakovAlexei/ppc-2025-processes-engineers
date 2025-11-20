@@ -7,7 +7,7 @@ processes:
         - A: 0
       seq:
         - S: 2
-        - R: 2
+      R: 2
       variants_max: 27
       Total: 12
     - name: mpi_task_2
@@ -16,7 +16,7 @@ processes:
         - A: 5
       seq:
         - S: 3
-        - R: 3
+      R: 3
       variants_max: 23
       Total: 23
     - name: mpi_task_3
@@ -25,10 +25,9 @@ processes:
         - A: 10
       seq:
         - S: 4
-        - R: 5
+      R: 5
       variants_max: 32
       Total: 35
-
 threads:
   semester_total: 64
   variants_max: 30
@@ -57,10 +56,8 @@ threads:
       A: 8
       R: 3
       Total: 21
-
 efficiency:
   num_proc: 4
-
 copying:
   coefficient: 0.5
   note: "Penalty C = -coefficient * S (scoreboard notation)"

@@ -16,17 +16,14 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-
     - name: Install pre-commit
       shell: bash
       run: pip install pre-commit
-
     - name: Update pre-commit hooks
       shell: bash
       run: |
         pre-commit autoupdate > /tmp/autoupdate.log 2>&1
         cat /tmp/autoupdate.log
-
     - name: Check for changes
       id: changes
       shell: bash
@@ -36,7 +33,6 @@ runs:
         else
           echo "changed=true" >> $GITHUB_OUTPUT
         fi
-
     - name: Create Pull Request
       if: steps.changes.outputs.changed == 'true'
       uses: peter-evans/create-pull-request@v7
@@ -47,7 +43,7 @@ runs:
         committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         body: |
-          ?? This PR was created automatically by the update-pre-commit workflow.
+          🤖 This PR was created automatically by the update-pre-commit workflow.
         branch: update-pre-commit-hooks
         base: master
         delete-branch: true

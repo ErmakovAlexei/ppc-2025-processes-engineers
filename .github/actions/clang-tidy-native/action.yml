@@ -32,21 +32,25 @@ runs:
         git config --global --add safe.directory $GITHUB_WORKSPACE
         git fetch origin ${{ github.event.pull_request.base.ref }}
 
-        # Check if .clang-tidy configuration changed
+        # Check if .clang-tidy files were changed
         CLANG_TIDY_CHANGED=$(git diff --name-only \
           origin/${{ github.event.pull_request.base.ref }}...HEAD \
           -- '**/.clang-tidy' || true)
 
         if [ -n "$CLANG_TIDY_CHANGED" ]; then
           echo "::notice::.clang-tidy configuration changed, analyzing all source files"
+          # Find all source files in the repository (excluding specified directories)
           CHANGED_FILES=$(find . -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h")
+          # Filter out excluded directories
           for exclude_dir in ${{ inputs.exclude }}; do
             CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -v "^./${exclude_dir}/" || true)
           done
         else
+          # Only analyze changed source files
           CHANGED_FILES=$(git diff --name-only \
             origin/${{ github.event.pull_request.base.ref }}...HEAD \
             -- '*.cpp' '*.hpp' '*.c' '*.h')
+          # Filter out excluded directories
           for exclude_dir in ${{ inputs.exclude }}; do
             CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -v "^${exclude_dir}/" || true)
           done
@@ -74,17 +78,17 @@ runs:
           if [ -n "$file" ] && [ -f "$file" ]; then
             echo "Analyzing $file..."
             FILE_OUTPUT=$(mktemp)
-
             if clang-tidy-${{ inputs.clang_tidy_version }} "$file" \
-                 -p ${{ inputs.build_dir }} --format-style=file 2>&1 | tee "$FILE_OUTPUT"; then
+               -p ${{ inputs.build_dir }} --format-style=file 2>&1 | \
+               tee "$FILE_OUTPUT"; then
               ISSUES=$(grep -c "warning:\|error:" "$FILE_OUTPUT" 2>/dev/null || echo "0")
+              ISSUES=$(echo "$ISSUES" | tr -d '[:space:]')
               TOTAL_ISSUES=$((TOTAL_ISSUES + ${ISSUES:-0}))
               cat "$FILE_OUTPUT" >> "$COMMENTS_FILE"
             else
               echo "::error::Failed to analyze $file"
               TOTAL_ISSUES=$((TOTAL_ISSUES + 1))
             fi
-
             rm -f "$FILE_OUTPUT"
           fi
         done <<< "${{ steps.changed-files.outputs.changed_files }}"
