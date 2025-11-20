@@ -1,10 +1,8 @@
 #include "ermakov_a_numb_viol_elem_vec/seq/include/ops_seq.hpp"
 
-#include <numeric>
 #include <vector>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace ermakov_a_numb_viol_elem_vec {
 

@@ -15,16 +15,12 @@ class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InTy
 
   void SetUp() override {
     input_data_.resize(kCount_);
-    std::iota(input_data_.begin(), input_data_.end(), 1);
+    std::ranges::iota(input_data_, 1);
     input_data_[kCount_ / 2] = -1;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    if (output_data >= 0) {
-      return true;
-    } else {
-      return false;
-    }
+    return output_data >= 0;
   }
 
   InType GetTestInputData() final {
@@ -43,6 +39,8 @@ const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
 const auto kPerfTestName = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
 
+namespace {
 INSTANTIATE_TEST_SUITE_P(RunModeTests, ErmakovANumbViolElemVecPerfTests, kGtestValues, kPerfTestName);
+}
 
 }  // namespace ermakov_a_numb_viol_elem_vec
