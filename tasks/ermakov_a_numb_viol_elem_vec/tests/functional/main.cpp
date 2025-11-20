@@ -43,7 +43,7 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    if (output_data >= 0) {
+    if (output_data == expected_output_) {
       return true;
     } else {
       return false;
