@@ -4,6 +4,7 @@
 #include <omp.h>
 
 #include <chrono>
+#include <csignal>
 #include <cstddef>
 #include <functional>
 #include <sstream>
@@ -19,8 +20,8 @@
 
 namespace ppc::util {
 
-auto GetTimeMPI() -> double;
-auto GetMPIRank() -> int;
+double GetTimeMPI();
+int GetMPIRank();
 
 template <typename InType, typename OutType>
 using PerfTestParam = std::tuple<std::function<ppc::task::TaskPtr<InType, OutType>(InType)>, std::string,
@@ -33,30 +34,30 @@ template <typename InType, typename OutType>
 class BaseRunPerfTests : public ::testing::TestWithParam<PerfTestParam<InType, OutType>> {
  public:
   /// @brief Generates a readable name for the performance test case.
-  static auto CustomPerfTestName(const ::testing::TestParamInfo<PerfTestParam<InType, OutType>> &info) -> std::string {
+  static std::string CustomPerfTestName(const ::testing::TestParamInfo<PerfTestParam<InType, OutType>> &info) {
     return ppc::performance::GetStringParamName(
                std::get<static_cast<std::size_t>(GTestParamIndex::kTestParams)>(info.param)) +
            "_" + std::get<static_cast<std::size_t>(GTestParamIndex::kNameTest)>(info.param);
   }
 
  protected:
-  virtual auto CheckTestOutputData(OutType &output_data) -> bool = 0;
+  virtual bool CheckTestOutputData(OutType &output_data) = 0;
   /// @brief Supplies input data for performance testing.
-  virtual auto GetTestInputData() -> InType = 0;
+  virtual InType GetTestInputData() = 0;
 
   virtual void SetPerfAttributes(ppc::performance::PerfAttr &perf_attrs) {
     if (task_->GetDynamicTypeOfTask() == ppc::task::TypeOfTask::kMPI ||
         task_->GetDynamicTypeOfTask() == ppc::task::TypeOfTask::kALL) {
       const double t0 = GetTimeMPI();
-      perf_attrs.current_timer = [t0] -> auto { return GetTimeMPI() - t0; };
+      perf_attrs.current_timer = [t0] { return GetTimeMPI() - t0; };
     } else if (task_->GetDynamicTypeOfTask() == ppc::task::TypeOfTask::kOMP) {
       const double t0 = omp_get_wtime();
-      perf_attrs.current_timer = [t0] -> auto { return omp_get_wtime() - t0; };
+      perf_attrs.current_timer = [t0] { return omp_get_wtime() - t0; };
     } else if (task_->GetDynamicTypeOfTask() == ppc::task::TypeOfTask::kSEQ ||
                task_->GetDynamicTypeOfTask() == ppc::task::TypeOfTask::kSTL ||
                task_->GetDynamicTypeOfTask() == ppc::task::TypeOfTask::kTBB) {
       const auto t0 = std::chrono::high_resolution_clock::now();
-      perf_attrs.current_timer = [&] -> auto {
+      perf_attrs.current_timer = [&] {
         auto now = std::chrono::high_resolution_clock::now();
         auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now - t0).count();
         return static_cast<double>(ns) * 1e-9;

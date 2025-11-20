@@ -1,7 +1,10 @@
+#include <gtest/gtest.h>
+
+#include "oneapi/tbb/global_control.h"
 #include "runners/include/runners.hpp"
 #include "util/include/util.hpp"
 
-auto main(int argc, char **argv) -> int {
+int main(int argc, char **argv) {
   if (ppc::util::IsUnderMpirun()) {
     return ppc::runners::Init(argc, argv);
   }

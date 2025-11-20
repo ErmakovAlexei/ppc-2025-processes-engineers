@@ -2,11 +2,11 @@
 
 #include "util/include/perf_test_util.hpp"
 
-auto ppc::util::GetTimeMPI() -> double {
+double ppc::util::GetTimeMPI() {
   return MPI_Wtime();
 }
 
-auto ppc::util::GetMPIRank() -> int {
+int ppc::util::GetMPIRank() {
   int rank = -1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;

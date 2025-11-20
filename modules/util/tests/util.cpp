@@ -13,7 +13,7 @@ struct Type {};
 }  // namespace my::nested
 
 TEST(UtilTests, ExtractsCorrectNamespace) {
-  const std::string k_ns = ppc::util::GetNamespace<my::nested::Type>();
+  std::string k_ns = ppc::util::GetNamespace<my::nested::Type>();
   EXPECT_EQ(k_ns, "my::nested");
 }
 
@@ -30,17 +30,17 @@ struct TypeInNamespace {};
 struct PlainType {};
 
 TEST(GetNamespaceTest, ReturnsExpectedNamespace) {
-  const std::string k_ns = ppc::util::GetNamespace<test_ns::TypeInNamespace>();
+  std::string k_ns = ppc::util::GetNamespace<test_ns::TypeInNamespace>();
   EXPECT_EQ(k_ns, "test_ns");
 }
 
 TEST(GetNamespaceTest, ReturnsEmptyIfNoNamespacePrimitiveType) {
-  const std::string k_ns = ppc::util::GetNamespace<int>();
+  std::string k_ns = ppc::util::GetNamespace<int>();
   EXPECT_EQ(k_ns, "");
 }
 
 TEST(GetNamespaceTest, ReturnsEmptyIfNoNamespacePlainStruct) {
-  const std::string k_ns = ppc::util::GetNamespace<PlainType>();
+  std::string k_ns = ppc::util::GetNamespace<PlainType>();
   EXPECT_EQ(k_ns, "");
 }
 
@@ -49,14 +49,14 @@ struct Nested {};
 }  // namespace test_ns
 
 TEST(GetNamespaceTest, ReturnsNamespaceCorrectly) {
-  const std::string k_ns = ppc::util::GetNamespace<test_ns::Nested>();
+  std::string k_ns = ppc::util::GetNamespace<test_ns::Nested>();
   EXPECT_EQ(k_ns, "test_ns");
 }
 
 struct NoNamespaceType {};
 
 TEST(GetNamespaceTest, NoNamespaceInType) {
-  const std::string k_ns = ppc::util::GetNamespace<NoNamespaceType>();
+  std::string k_ns = ppc::util::GetNamespace<NoNamespaceType>();
   EXPECT_EQ(k_ns, "");
 }
 
@@ -64,7 +64,7 @@ template <typename T>
 struct NotATemplate {};
 
 TEST(GetNamespaceTest, NoKeyInPrettyFunction) {
-  const std::string k_ns = ppc::util::GetNamespace<NotATemplate<void>>();
+  std::string k_ns = ppc::util::GetNamespace<NotATemplate<void>>();
   EXPECT_EQ(k_ns, "");
 }
 
@@ -73,7 +73,7 @@ struct VeryLongTypeNameWithOnlyLettersAndUnderscores {};
 }  // namespace crazy
 
 TEST(GetNamespaceTest, NoTerminatorCharactersInPrettyFunction) {
-  const std::string k_ns = ppc::util::GetNamespace<crazy::VeryLongTypeNameWithOnlyLettersAndUnderscores>();
+  std::string k_ns = ppc::util::GetNamespace<crazy::VeryLongTypeNameWithOnlyLettersAndUnderscores>();
   EXPECT_EQ(k_ns, "crazy");
 }
 
@@ -89,7 +89,7 @@ TEST(GetTaskMaxTime, ReturnsDefaultWhenUnset) {
 }
 
 TEST(GetTaskMaxTime, ReadsFromEnvironment) {
-  const env::detail::set_scoped_environment_variable scoped("PPC_TASK_MAX_TIME", "2.5");
+  env::detail::set_scoped_environment_variable scoped("PPC_TASK_MAX_TIME", "2.5");
   EXPECT_DOUBLE_EQ(ppc::util::GetTaskMaxTime(), 2.5);
 }
 
@@ -105,7 +105,7 @@ TEST(GetPerfMaxTime, ReturnsDefaultWhenUnset) {
 }
 
 TEST(GetPerfMaxTime, ReadsFromEnvironment) {
-  const env::detail::set_scoped_environment_variable scoped("PPC_PERF_MAX_TIME", "12.5");
+  env::detail::set_scoped_environment_variable scoped("PPC_PERF_MAX_TIME", "12.5");
   EXPECT_DOUBLE_EQ(ppc::util::GetPerfMaxTime(), 12.5);
 }
 
@@ -121,6 +121,6 @@ TEST(GetNumProc, ReturnsDefaultWhenUnset) {
 }
 
 TEST(GetNumProc, ReadsFromEnvironment) {
-  const env::detail::set_scoped_environment_variable scoped("PPC_NUM_PROC", "4");
+  env::detail::set_scoped_environment_variable scoped("PPC_NUM_PROC", "4");
   EXPECT_EQ(ppc::util::GetNumProc(), 4);
 }

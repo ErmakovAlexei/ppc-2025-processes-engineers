@@ -61,7 +61,7 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
 
 namespace {
 
-const std::array<TestType, 8> kTestParam = {
+const std::array<TestType, 9> kTestParam = {
 
     std::make_tuple(std::vector<int>{1, 2, 3, 4, 5}, 0),
 
@@ -71,14 +71,15 @@ const std::array<TestType, 8> kTestParam = {
 
     std::make_tuple(std::vector<int>{7, 7, 7, 7}, 0),
 
-    std::make_tuple(std::vector<int>{1, 2, 1}, 1),
-
     std::make_tuple(std::vector<int>{42}, 0),
 
     std::make_tuple(std::vector<int>{}, 0),
 
     std::make_tuple(std::vector<int>{1, 3, 2, 4, 3, 5, 4}, 3),
-};
+
+    std::make_tuple(std::vector<int>{2, 1, 3}, 1),
+
+    std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8)};
 
 TEST_P(ErmakovANumbViolElemVecFuncTests, CountViolations) {
   ExecuteTest(GetParam());

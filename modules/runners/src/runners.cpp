@@ -72,7 +72,7 @@ void WorkerTestFailurePrinter::PrintProcessRank() {
 }
 
 namespace {
-auto RunAllTests() -> int {
+int RunAllTests() {
   auto status = RUN_ALL_TESTS();
   if (ppc::util::DestructorFailureFlag::Get()) {
     throw std::runtime_error(
@@ -115,7 +115,7 @@ void SyncGTestFilter() {
   ::testing::GTEST_FLAG(filter) = filter;
 }
 
-auto HasFlag(int argc, char **argv, std::string_view flag) -> bool {
+bool HasFlag(int argc, char **argv, std::string_view flag) {
   for (int i = 1; i < argc; ++i) {
     if (argv[i] != nullptr && std::string_view(argv[i]) == flag) {
       return true;
@@ -124,7 +124,7 @@ auto HasFlag(int argc, char **argv, std::string_view flag) -> bool {
   return false;
 }
 
-auto RunAllTestsSafely() -> int {
+int RunAllTestsSafely() {
   try {
     return RunAllTests();
   } catch (const std::exception &e) {
@@ -139,7 +139,7 @@ auto RunAllTestsSafely() -> int {
 }
 }  // namespace
 
-auto Init(int argc, char **argv) -> int {
+int Init(int argc, char **argv) {
   const int init_res = MPI_Init(&argc, &argv);
   if (init_res != MPI_SUCCESS) {
     std::cerr << std::format("[  ERROR  ] MPI_Init failed with code {}", init_res) << '\n';
@@ -148,7 +148,7 @@ auto Init(int argc, char **argv) -> int {
   }
 
   // Limit the number of threads in TBB
-  const tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
+  tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
 
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -177,9 +177,9 @@ auto Init(int argc, char **argv) -> int {
   return status;
 }
 
-auto SimpleInit(int argc, char **argv) -> int {
+int SimpleInit(int argc, char **argv) {
   // Limit the number of threads in TBB
-  const tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
+  tbb::global_control control(tbb::global_control::max_allowed_parallelism, ppc::util::GetNumThreads());
 
   testing::InitGoogleTest(&argc, argv);
   return RunAllTests();

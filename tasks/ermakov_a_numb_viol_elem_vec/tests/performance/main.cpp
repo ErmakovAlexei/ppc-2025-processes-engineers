@@ -19,11 +19,15 @@ class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InTy
     input_data_[kCount_ / 2] = -1;
   }
 
-  auto CheckTestOutputData(OutType &output_data) -> bool final {
-    return output_data >= 0;
+  bool CheckTestOutputData(OutType &output_data) final {
+    if (output_data >= 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  auto GetTestInputData() -> InType final {
+  InType GetTestInputData() final {
     return input_data_;
   }
 };
