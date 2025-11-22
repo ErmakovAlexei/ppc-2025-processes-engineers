@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <numeric>
+#include <random>
+#include <vector>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
 #include "ermakov_a_numb_viol_elem_vec/mpi/include/ops_mpi.hpp"
@@ -10,13 +11,12 @@
 namespace ermakov_a_numb_viol_elem_vec {
 
 class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 500000000;
-  InType input_data_;
+ public:
+  ErmakovANumbViolElemVecPerfTests() = default;
 
+ protected:
   void SetUp() override {
-    input_data_.resize(kCount_);
-    std::ranges::iota(input_data_, 1);
-    input_data_[kCount_ / 2] = -1;
+    PrepareInput();
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
@@ -25,6 +25,31 @@ class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InTy
 
   InType GetTestInputData() final {
     return input_data_;
+  }
+
+ private:
+  static constexpr int CountElem = 200000000;
+  InType input_data_;
+
+  void PrepareInput() {
+    input_data_.resize(CountElem);
+
+    std::mt19937 gen(1337);
+    std::uniform_int_distribution<int> low(0, 50);
+    std::uniform_int_distribution<int> high(200, 500);
+
+    for (int i = 0; i < CountElem; ++i) {
+      if ((i / 1000) % 2 == 0) {
+        input_data_[i] = low(gen);
+      } else {
+        input_data_[i] = high(gen);
+      }
+    }
+
+    for (int j = 0; j < 100; ++j) {
+      int pos = gen() % (CountElem - 1);
+      input_data_[pos] = input_data_[pos + 1] + 100;
+    }
   }
 };
 
@@ -37,10 +62,8 @@ const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolE
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
-const auto kPerfTestName = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
+const auto kPerfName = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
 
-namespace {
-INSTANTIATE_TEST_SUITE_P(RunModeTests, ErmakovANumbViolElemVecPerfTests, kGtestValues, kPerfTestName);
-}
+INSTANTIATE_TEST_SUITE_P(PerfRuns, ErmakovANumbViolElemVecPerfTests, kGtestValues, kPerfName);
 
 }  // namespace ermakov_a_numb_viol_elem_vec

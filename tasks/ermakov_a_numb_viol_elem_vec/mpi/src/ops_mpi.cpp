@@ -3,11 +3,7 @@
 #include <mpi.h>
 
 #include <algorithm>
-#include <numeric>
 #include <vector>
-
-#include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace ermakov_a_numb_viol_elem_vec {
 
@@ -20,99 +16,48 @@ ErmakovANumbViolElemVecMPI::ErmakovANumbViolElemVecMPI(const InType &in) {
 bool ErmakovANumbViolElemVecMPI::ValidationImpl() {
   return true;
 }
-
 bool ErmakovANumbViolElemVecMPI::PreProcessingImpl() {
   return true;
 }
 
 bool ErmakovANumbViolElemVecMPI::RunImpl() {
-  int rank;
-  int size;
+  int rank = 0;
+  int size = 0;
+
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  const std::vector<int> &vec = GetInput();
+  const auto &vec = GetInput();
   int n = static_cast<int>(vec.size());
 
-  if (n == 0) {
-    int zero = 0;
-    MPI_Bcast(&zero, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    GetOutput() = 0;
-    return true;
-  }
+  MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  int base = n / size;
-  int rem = n % size;
+  int chunk = (n + size - 1) / size;
 
-  std::vector<int> cnt(size);
-  std::vector<int> disp(size);
+  std::vector<int> local(chunk);
 
-  int shift = 0;
-  for (int i = 0; i < size; ++i) {
-    cnt[i] = base;
-    if (i < rem) {
-      cnt[i] = base + 1;
-    }
-    disp[i] = shift;
-    shift += cnt[i];
-  }
-
-  int local_n = cnt[rank];
-  std::vector<int> initerim_vec(local_n);
+  const int *src = nullptr;
+  std::vector<int> padded;
 
   if (rank == 0) {
-    if (local_n > 0) {
-      for (int i = 0; i < local_n; i++) {
-        initerim_vec[i] = vec[i];
-      }
-    }
-
-    for (int p = 1; p < size; ++p) {
-      if (cnt[p] > 0) {
-        MPI_Send(&vec[disp[p]], cnt[p], MPI_INT, p, 0, MPI_COMM_WORLD);
-      }
-    }
-  } else {
-    if (local_n > 0) {
-      MPI_Recv(initerim_vec.data(), local_n, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
+    padded = vec;
+    padded.resize(chunk * size, std::numeric_limits<int>::max());
+    src = padded.data();
   }
 
-  int interim_viol = 0;
-  for (int i = 0; i + 1 < local_n; ++i) {
-    if (initerim_vec[i] > initerim_vec[i + 1]) {
-      interim_viol++;
-    }
+  MPI_Scatter(src, chunk, MPI_INT, local.data(), chunk, MPI_INT, 0, MPI_COMM_WORLD);
+
+  int local_count = 0;
+  for (int i = 0; i + 1 < chunk; ++i) {
+    local_count += (local[i] > local[i + 1]);
   }
 
-  int border = 0;
+  int global_count = 0;
+  MPI_Reduce(&local_count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-  if (rank > 0 && local_n > 0) {
-    int left_last = 0;
-    MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  MPI_Bcast(&global_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (rank + 1 < size && cnt[rank + 1] > 0) {
-      int my_last = initerim_vec[local_n - 1];
-      MPI_Send(&my_last, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
-    }
-
-    if (left_last > initerim_vec[0]) {
-      border = 1;
-    }
-  } else if (rank == 0 && local_n > 0) {
-    if (size > 1 && cnt[1] > 0) {
-      int my_last = initerim_vec[local_n - 1];
-      MPI_Send(&my_last, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);
-    }
-  }
-
-  int total_interim_viol = interim_viol + border;
-  int res = 0;
-
-  MPI_Reduce(&total_interim_viol, &res, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&res, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  GetOutput() = res;
+  GetOutput() = global_count;
   return true;
 }
 
