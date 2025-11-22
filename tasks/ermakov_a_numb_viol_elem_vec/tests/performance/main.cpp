@@ -54,18 +54,14 @@ TEST_P(ErmakovANumbViolElemVecPerfTests, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
-namespace {
-
 const auto kPerfTasksErmakov =
     ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(
         PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
 
-const auto kPerfValuesErmakov = ppc::util::TupleToGTestValues(kPerfTasksErmakov);
+const auto kGtestValues = ppc::util::TupleToGTestValues(kPerfTasksErmakov);
 
-const auto kPerfNameErmakov = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
+const auto kPerfTestName = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
 
-INSTANTIATE_TEST_SUITE_P(PerfTestsErmakov, ErmakovANumbViolElemVecPerfTests, kPerfValuesErmakov, kPerfNameErmakov);
-
-}  // namespace
+INSTANTIATE_TEST_SUITE_P(RunModeTests, ErmakovANumbViolElemVecPerfTests, kGtestValues, kPerfTestName);
 
 }  // namespace ermakov_a_numb_viol_elem_vec

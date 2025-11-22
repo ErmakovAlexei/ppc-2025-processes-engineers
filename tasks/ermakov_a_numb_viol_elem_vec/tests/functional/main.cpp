@@ -67,6 +67,10 @@ const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8),
 };
 
+TEST_P(ErmakovANumbViolElemVecFuncTests, NumbViolElemVec) {
+  ExecuteTest(GetParam());
+}
+
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<ErmakovANumbViolElemVecMPI, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec),
     ppc::util::AddFuncTask<ErmakovANumbViolElemVecSEQ, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec));
@@ -75,7 +79,7 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVecTests, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
+INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
 
 }  // namespace
 
