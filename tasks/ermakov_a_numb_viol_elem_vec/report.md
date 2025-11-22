@@ -113,6 +113,20 @@ RunImpl() - основной алгоритм
 
 PostProcessingImpl() - проверка результата
 
+Вспомогательные функции (MPI)
+
+ComputeBlocks()
+Вычисляет размеры блоков и смещения для каждого процесса.
+
+ScatterData()
+Распределяет данные между процессами вручную с помощью MPI_Send/MPI_Recv.
+
+CountLocalViolations()
+Считает количество нарушений монотонности внутри локального блока.
+
+CheckBoundaryViolation()
+Проверяет нарушение на границе с предыдущим процессом.
+
 Граничные случаи
 
 N = 0 - возвращает 0
@@ -152,7 +166,7 @@ CMake: 4.2.0-rc1
 
 Тесты производительности:
 
-Размер вектора: 100,000,000
+Размер вектора: 250,000,000
 
 Количество процессов: 1, 2, 3, 4
 
@@ -191,7 +205,7 @@ CMake: 4.2.0-rc1
 
 7.2 Производительность
 
-Измерения проведены на векторе из 10,000,000 элементов.
+Измерения проведены на векторе из 250,000,000 элементов.
 Для каждого числа процессов выполняется 4 теста, соответствующие режимам:
 
 pipeline (mpi)
@@ -202,35 +216,17 @@ pipeline (seq)
 
 task_run (seq)
 
-Поэтому в выводе всегда появляется 4 строки с результатами.
-
-pipeline
-Режим	Процессов	Время, сек	Ускорение	Эффективность
-seq	1	0.0772	1.00	N/A
-mpi	1	0.2359	0.33	33.0%
-mpi	2	0.1893	0.41	20.5%
-mpi	3	0.1762	0.44	14.6%
-mpi	4	0.1828	0.42	10.5%
-Примечание
-
-pipeline-MPI работает медленнее seq, потому что:
-
-задача очень проста (подсчёт нарушений)
-
-объём работы на процесс большой, но
-
-MPI добавляет значительные накладные расходы: синхронизацию, передачу блоков, сбор результатов.
-
-task_run
-Режим	Процессов	Время, сек	Ускорение	Эффективность
-seq	1	0.0769	1.00	N/A
-mpi	1	0.2333	0.33	33.0%
-mpi	2	0.1931	0.40	20.0%
-mpi	3	0.1881	0.41	13.7%
-mpi	4	0.1924	0.40	10.0%
-Примечание
-
-Поведение аналогично pipeline: MPI-накладные расходы перекрывают выгоду параллелизма.
+Режим	            Процессов	Время, сек	Speedup	Efficiency
+seq     pipeline	1	        0.1812	    1.00	N/A
+seq     task_run	1	        0.1908	    1.00	N/A
+mpi     pipeline	1	        0.6825	    0.27    26.6%
+mpi     task_run	1	        0.5879	    0.32	32.5%
+mpi     pipeline	2	        0.4325	    0.42	20.9%
+mpi     task_run	2	        0.5329	    0.36	17.9%
+mpi     pipeline	3	        0.3602	    0.50	16.8%
+mpi     task_run	3	        0.5220	    0.37	12.2%
+mpi     pipeline	4	        0.8899	    0.20	5.1%
+mpi     task_run	4	        0.4042	    0.47	11.8%
 
 Расчет показателей:
 
@@ -271,18 +267,53 @@ GetOutput() = viol;
 
 MPI версия:
 
-// Деление данных
+// Разделение данных на блоки для процессов
 int base = N / P;
 int rem = N % P;
-int cnt[rank], disp[rank]; // блоки
-MPI_Send / MPI_Recv // раздача
-// Подсчет локальных нарушений
+std::vector<int> counts(P), displs(P);
+for (int i = 0, shift = 0; i < P; ++i) {
+    counts[i] = base + (i < rem ? 1 : 0);
+    displs[i] = shift;
+    shift += counts[i];
+}
+
+// Распределение данных вручную
+std::vector<int> local(counts[rank]);
+if (rank == 0) {
+    std::copy(vec.begin(), vec.begin() + counts[0], local.begin());
+    for (int dest = 1; dest < P; ++dest) {
+        if (counts[dest] > 0) {
+            MPI_Send(vec.data() + displs[dest], counts[dest], MPI_INT, dest, 0, MPI_COMM_WORLD);
+        }
+    }
+} else {
+    if (!local.empty()) {
+        MPI_Recv(local.data(), counts[rank], MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+}
+
+// Подсчёт локальных нарушений
 int local_viol = 0;
-for (int i = 0; i + 1 < local_n; ++i)
-    if (local_vec[i] > local_vec[i+1]) local_viol++;
-// Граница
-if (left_last > local_vec[0]) border = 1;
-// Суммирование
-MPI_Reduce(&total_viol, &res, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-MPI_Bcast(&res, 1, MPI_INT, 0, MPI_COMM_WORLD);
-GetOutput() = res;
+for (size_t i = 0; i + 1 < local.size(); ++i) {
+    if (local[i] > local[i+1]) ++local_viol;
+}
+
+// Проверка нарушения на границе
+int border_viol = 0;
+if (rank > 0) {
+    int left_last;
+    MPI_Recv(&left_last, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    if (left_last > local.front()) border_viol = 1;
+}
+if (rank < P - 1) {
+    MPI_Send(&local.back(), 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+}
+
+// Суммирование локальных и граничных нарушений
+int local_sum = local_viol + border_viol;
+int global_sum = 0;
+MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+// Рассылка результата
+MPI_Bcast(&global_sum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+GetOutput() = global_sum;
