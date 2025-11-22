@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <random>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
@@ -17,11 +16,12 @@ class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InTy
 
     input_data_.resize(k_input_size);
 
-    std::mt19937 gen(12345);
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<int> small_dist(0, 50);
     std::uniform_int_distribution<int> large_dist(100, 500);
 
-    for (int i = 0; i < k_input_size; i++) {
+    for (int i = 0; i < k_input_size; ++i) {
       if ((i % 2) == 0) {
         input_data_[i] = large_dist(gen);
       } else {
@@ -30,7 +30,7 @@ class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InTy
     }
 
     expected_count_ = 0;
-    for (int i = 0; i + 1 < k_input_size; i++) {
+    for (int i = 0; i + 1 < k_input_size; ++i) {
       if (input_data_[i] > input_data_[i + 1]) {
         ++expected_count_;
       }
@@ -56,16 +56,15 @@ TEST_P(ErmakovANumbViolElemVecPerfTests, RunPerfModes) {
 
 namespace {
 
-const auto k_perf_tasks_ermakov =
+const auto kPerfTasksErmakov =
     ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(
         PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
 
-const auto k_perf_values_ermakov = ppc::util::TupleToGTestValues(k_perf_tasks_ermakov);
+const auto kPerfValuesErmakov = ppc::util::TupleToGTestValues(kPerfTasksErmakov);
 
-const auto k_perf_name_ermakov = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
+const auto kPerfNameErmakov = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
 
-INSTANTIATE_TEST_SUITE_P(PerfTestsErmakov, ErmakovANumbViolElemVecPerfTests, k_perf_values_ermakov,
-                         k_perf_name_ermakov);
+INSTANTIATE_TEST_SUITE_P(PerfTestsErmakov, ErmakovANumbViolElemVecPerfTests, kPerfValuesErmakov, kPerfNameErmakov);
 
 }  // namespace
 
