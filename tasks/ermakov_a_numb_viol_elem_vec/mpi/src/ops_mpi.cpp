@@ -2,10 +2,79 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <vector>
 
+#include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
+
 namespace ermakov_a_numb_viol_elem_vec {
+
+static void ComputeBlocks(int total_size, int world_size, std::vector<int> &counts, std::vector<int> &displs) {
+  counts.resize(world_size);
+  displs.resize(world_size);
+
+  const int base = total_size / world_size;
+  const int rem = total_size % world_size;
+
+  int shift = 0;
+  for (int rank = 0; rank < world_size; ++rank) {
+    counts[rank] = base + (rank < rem ? 1 : 0);
+    displs[rank] = shift;
+    shift += counts[rank];
+  }
+}
+
+static void ScatterData(const std::vector<int> &input, std::vector<int> &local, const std::vector<int> &counts,
+                        const std::vector<int> &displs, int rank) {
+  if (counts[rank] == 0) {
+    return;
+  }
+
+  if (rank == 0) {
+    std::copy(input.begin(), input.begin() + counts[0], local.begin());
+
+    for (int dest_rank = 1; dest_rank < static_cast<int>(counts.size()); ++dest_rank) {
+      if (counts[dest_rank] > 0) {
+        MPI_Send(input.data() + displs[dest_rank], counts[dest_rank], MPI_INT, dest_rank, 0, MPI_COMM_WORLD);
+      }
+    }
+  } else {
+    MPI_Recv(local.data(), counts[rank], MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
+}
+
+static int CountLocalViolations(const std::vector<int> &local) {
+  int count = 0;
+  for (std::size_t i = 0; i + 1 < local.size(); ++i) {
+    if (local[i] > local[i + 1]) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+static int CheckBoundaryViolation(const std::vector<int> &local, const std::vector<int> &counts, int rank,
+                                  int world_size) {
+  if (local.empty()) {
+    return 0;
+  }
+
+  int left_last_value = 0;
+  int my_last_value = local.back();
+
+  if (rank > 0) {
+    MPI_Recv(&left_last_value, 1, MPI_INT, rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
+
+  if (rank + 1 < world_size && counts[rank + 1] > 0) {
+    MPI_Send(&my_last_value, 1, MPI_INT, rank + 1, 1, MPI_COMM_WORLD);
+  }
+
+  if (rank > 0 && left_last_value > local.front()) {
+    return 1;
+  }
+
+  return 0;
+}
 
 ErmakovANumbViolElemVecMPI::ErmakovANumbViolElemVecMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -16,48 +85,46 @@ ErmakovANumbViolElemVecMPI::ErmakovANumbViolElemVecMPI(const InType &in) {
 bool ErmakovANumbViolElemVecMPI::ValidationImpl() {
   return true;
 }
+
 bool ErmakovANumbViolElemVecMPI::PreProcessingImpl() {
   return true;
 }
 
 bool ErmakovANumbViolElemVecMPI::RunImpl() {
   int rank = 0;
-  int size = 0;
+  int world_size = 0;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  const auto &vec = GetInput();
-  int n = static_cast<int>(vec.size());
+  const std::vector<int> &input = GetInput();
+  int n = static_cast<int>(input.size());
 
   MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  int chunk = (n + size - 1) / size;
-
-  std::vector<int> local(chunk);
-
-  const int *src = nullptr;
-  std::vector<int> padded;
-
-  if (rank == 0) {
-    padded = vec;
-    padded.resize(chunk * size, std::numeric_limits<int>::max());
-    src = padded.data();
+  if (n == 0) {
+    GetOutput() = 0;
+    return true;
   }
 
-  MPI_Scatter(src, chunk, MPI_INT, local.data(), chunk, MPI_INT, 0, MPI_COMM_WORLD);
+  std::vector<int> counts;
+  std::vector<int> displs;
+  ComputeBlocks(n, world_size, counts, displs);
 
-  int local_count = 0;
-  for (int i = 0; i + 1 < chunk; ++i) {
-    local_count += (local[i] > local[i + 1]);
-  }
+  std::vector<int> local(counts[rank]);
 
-  int global_count = 0;
-  MPI_Reduce(&local_count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  ScatterData(input, local, counts, displs, rank);
 
-  MPI_Bcast(&global_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  const int local_viol = CountLocalViolations(local);
+  const int border_viol = CheckBoundaryViolation(local, counts, rank, world_size);
 
-  GetOutput() = global_count;
+  int local_sum = local_viol + border_viol;
+  int global_sum = 0;
+
+  MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&global_sum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  GetOutput() = global_sum;
   return true;
 }
 

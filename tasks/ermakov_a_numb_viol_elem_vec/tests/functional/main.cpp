@@ -21,14 +21,13 @@ using ermakov_a_numb_viol_elem_vec::TestType;
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    const std::vector<int> &vec = std::get<0>(test_param);
+    const auto &vec = std::get<0>(test_param);
     const int expected = std::get<1>(test_param);
 
     std::string name = "size_";
     name += std::to_string(vec.size());
     name += "_exp_";
     name += std::to_string(expected);
-
     return name;
   }
 
@@ -50,31 +49,23 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
   }
 
  private:
-  InType input_data_;
-  OutType expected_output_;
+  InType input_data_{};
+  OutType expected_output_{};
 };
 
 namespace {
 
 const std::array<TestType, 9> kTestParam = {
-
     std::make_tuple(std::vector<int>{1, 2, 3, 4, 5}, 0),
-
     std::make_tuple(std::vector<int>{5, 4, 3, 2, 1}, 4),
-
     std::make_tuple(std::vector<int>{1, 3, 2, 5, 4}, 2),
-
     std::make_tuple(std::vector<int>{7, 7, 7, 7}, 0),
-
     std::make_tuple(std::vector<int>{42}, 0),
-
     std::make_tuple(std::vector<int>{}, 0),
-
     std::make_tuple(std::vector<int>{1, 3, 2, 4, 3, 5, 4}, 3),
-
     std::make_tuple(std::vector<int>{2, 1, 3}, 1),
-
-    std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8)};
+    std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8),
+};
 
 TEST_P(ErmakovANumbViolElemVecFuncTests, CountViolations) {
   ExecuteTest(GetParam());
@@ -87,12 +78,8 @@ const auto kTestTasksList = std::tuple_cat(
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-namespace {
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(NumViolElemVecTests, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
-
-}
-
-}  // namespace
 
 }  // namespace ermakov_a_numb_viol_elem_vec
