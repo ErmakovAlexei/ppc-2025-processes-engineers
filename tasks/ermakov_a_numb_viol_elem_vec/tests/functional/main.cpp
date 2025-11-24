@@ -16,6 +16,8 @@ namespace ermakov_a_numb_viol_elem_vec {
 
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
+  ErmakovANumbViolElemVecFuncTests() = default;  // поля уже корректно инициализированы
+
   static std::string PrintTestParam(const TestType &test_param) {
     const auto &vec = std::get<0>(test_param);
     const int expected = std::get<1>(test_param);
@@ -46,7 +48,7 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
 
  private:
   InType input_data_;
-  OutType expected_output_;
+  OutType expected_output_{0};
 };
 
 const std::array<TestType, 9> kTestParam = {
@@ -61,7 +63,7 @@ const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8),
 };
 
-namespace {
+namespace {  // <-- ключевой момент: всё static — внутрь анонимного namespace
 
 TEST_P(ErmakovANumbViolElemVecFuncTests, NumbViolElemVec) {
   ExecuteTest(GetParam());
@@ -73,9 +75,9 @@ const auto kTestTasksList = std::tuple_cat(
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
+const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
 
 }  // namespace
 
