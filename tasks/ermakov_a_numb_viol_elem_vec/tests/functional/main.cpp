@@ -77,8 +77,8 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues,
-                         kFuncTestName);  // NOLINT(cert-err58-cpp, cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTNEXTLINE(cert-err58-cpp, cppcoreguidelines-avoid-non-const-global-variables, modernize-type-traits)
+INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
 
 }  // namespace
 
