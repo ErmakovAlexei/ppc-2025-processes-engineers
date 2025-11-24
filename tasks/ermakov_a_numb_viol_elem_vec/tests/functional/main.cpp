@@ -14,10 +14,6 @@
 
 namespace ermakov_a_numb_viol_elem_vec {
 
-using ermakov_a_numb_viol_elem_vec::InType;
-using ermakov_a_numb_viol_elem_vec::OutType;
-using ermakov_a_numb_viol_elem_vec::TestType;
-
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
@@ -53,8 +49,6 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
   OutType expected_output_;
 };
 
-namespace {
-
 const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 3, 4, 5}, 0),
     std::make_tuple(std::vector<int>{5, 4, 3, 2, 1}, 4),
@@ -67,6 +61,8 @@ const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8),
 };
 
+namespace {
+
 TEST_P(ErmakovANumbViolElemVecFuncTests, NumbViolElemVec) {
   ExecuteTest(GetParam());
 }
@@ -77,9 +73,9 @@ const auto kTestTasksList = std::tuple_cat(
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
+const auto kPerfTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
+INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
