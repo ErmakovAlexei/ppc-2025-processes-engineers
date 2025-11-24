@@ -54,9 +54,8 @@ TEST_P(ErmakovANumbViolElemVecPerfTests, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
-namespace {  // <-- ключевое изменение: всё, что создаёт static — внутрь анонимного namespace
+namespace {
 
-// Все переменные сделаны const → clang-tidy больше не ругается
 const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, ErmakovANumbViolElemVecMPI, ErmakovANumbViolElemVecSEQ>(
     PPC_SETTINGS_ermakov_a_numb_viol_elem_vec);
 
@@ -64,8 +63,8 @@ const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
 const auto kPerfTestName = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
 
-// GTest-макрос теперь находится в анонимном namespace — clang-tidy больше не жалуется
-INSTANTIATE_TEST_SUITE_P(PerfTests, ErmakovANumbViolElemVecPerfTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(PerfTests, ErmakovANumbViolElemVecPerfTests, kGtestValues,
+                         kPerfTestName);  // NOLINT(cert-err58-cpp, cppcoreguidelines-avoid-non-const-global-variables)
 
 }  // namespace
 

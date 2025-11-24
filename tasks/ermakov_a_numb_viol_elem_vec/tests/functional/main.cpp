@@ -16,7 +16,7 @@ namespace ermakov_a_numb_viol_elem_vec {
 
 class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
-  ErmakovANumbViolElemVecFuncTests() = default;  // поля уже корректно инициализированы
+  ErmakovANumbViolElemVecFuncTests() = default;
 
   static std::string PrintTestParam(const TestType &test_param) {
     const auto &vec = std::get<0>(test_param);
@@ -63,7 +63,7 @@ const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8),
 };
 
-namespace {  // <-- ключевой момент: всё static — внутрь анонимного namespace
+namespace {
 
 TEST_P(ErmakovANumbViolElemVecFuncTests, NumbViolElemVec) {
   ExecuteTest(GetParam());
@@ -77,7 +77,8 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
+INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues,
+                         kFuncTestName);  // NOLINT(cert-err58-cpp, cppcoreguidelines-avoid-non-const-global-variables)
 
 }  // namespace
 
