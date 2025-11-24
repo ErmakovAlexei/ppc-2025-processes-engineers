@@ -21,7 +21,7 @@ void ComputeBlocks(int total_size, int world_size, std::vector<int> &counts, std
 
   int shift = 0;
   for (int rank = 0; rank < world_size; ++rank) {
-    counts[rank] = base + (rank < rem ? 1 : 0);  // ? : чтобы прошел clang-tidyclang-tidy
+    counts[rank] = base + (rank < rem ? 1 : 0);  // ? : чтобы прошел clang-tidy
     displs[rank] = shift;
     shift += counts[rank];
   }
