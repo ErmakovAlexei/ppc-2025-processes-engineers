@@ -2,8 +2,8 @@
 
 #include <mpi.h>
 
-#include <algorithm>  // std::copy
-#include <cstddef>    // std::size_t
+#include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "ermakov_a_numb_viol_elem_vec/common/include/common.hpp"
