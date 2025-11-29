@@ -12,7 +12,7 @@ namespace ermakov_a_numb_viol_elem_vec {
 class ErmakovANumbViolElemVecPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   void SetUp() override {
-    const int k_input_size = 250000000;
+    const int k_input_size = 260000000;
 
     input_data_.resize(k_input_size);
 
