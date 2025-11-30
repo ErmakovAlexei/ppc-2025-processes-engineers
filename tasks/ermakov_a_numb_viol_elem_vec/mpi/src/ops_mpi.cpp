@@ -29,20 +29,23 @@ void ComputeBlocks(int total_size, int world_size, std::vector<int> &counts, std
 
 void ScatterData(const std::vector<int> &input, std::vector<int> &local, const std::vector<int> &counts,
                  const std::vector<int> &displs, int rank) {
-  if (counts[rank] == 0) {
-    return;
-  }
+  const int world_size = static_cast<int>(counts.size());
 
   if (rank == 0) {
-    std::copy(input.begin(), input.begin() + counts[0], local.begin());
+    for (int dest = 0; dest < world_size; ++dest) {
+      if (counts[dest] == 0) {
+        continue;
+      }
 
-    const int world_size = static_cast<int>(counts.size());
-    for (int dest_rank = 1; dest_rank < world_size; ++dest_rank) {
-      if (counts[dest_rank] > 0) {
-        MPI_Send(input.data() + displs[dest_rank], counts[dest_rank], MPI_INT, dest_rank, 0, MPI_COMM_WORLD);
+      if (dest == 0) {
+        MPI_Send(input.data(), counts[0], MPI_INT, 0, 0, MPI_COMM_WORLD);
+      } else {
+        MPI_Send(input.data() + displs[dest], counts[dest], MPI_INT, dest, 0, MPI_COMM_WORLD);
       }
     }
-  } else {
+  }
+
+  if (counts[rank] > 0) {
     MPI_Recv(local.data(), counts[rank], MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 }
