@@ -63,7 +63,6 @@ const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
 const auto kPerfTestName = ErmakovANumbViolElemVecPerfTests::CustomPerfTestName;
 
-// NOLINTNEXTLINE(cert-err58-cpp, cppcoreguidelines-avoid-non-const-global-variables, modernize-type-traits)
 INSTANTIATE_TEST_SUITE_P(PerfTests, ErmakovANumbViolElemVecPerfTests, kGtestValues, kPerfTestName);
 
 }  // namespace
