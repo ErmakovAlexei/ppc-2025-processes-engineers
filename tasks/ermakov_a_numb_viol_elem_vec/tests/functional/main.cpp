@@ -14,25 +14,20 @@
 
 namespace ermakov_a_numb_viol_elem_vec {
 
-class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class ErmakovRunFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
-  ErmakovANumbViolElemVecFuncTests() = default;
-
   static std::string PrintTestParam(const TestType &test_param) {
     const auto &vec = std::get<0>(test_param);
-    const int expected = std::get<1>(test_param);
-
-    std::string name = "size_";
-    name += std::to_string(vec.size());
-    name += "_exp_";
-    name += std::to_string(expected);
-    return name;
+    int expected = std::get<1>(test_param);
+    return "size_" + std::to_string(vec.size()) + "_exp_" + std::to_string(expected);
   }
 
  protected:
+  InType input_data_;
+  OutType expected_output_;
+
   void SetUp() override {
-    const TestType &params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(
-        ErmakovANumbViolElemVecFuncTests::GetParam());
+    const TestType params = std::get<TestType>(ErmakovRunFuncTests::GetParam());
 
     input_data_ = std::get<0>(params);
     expected_output_ = std::get<1>(params);
@@ -45,11 +40,13 @@ class ErmakovANumbViolElemVecFuncTests : public ppc::util::BaseRunFuncTests<InTy
   InType GetTestInputData() final {
     return input_data_;
   }
-
- private:
-  InType input_data_;
-  OutType expected_output_{0};
 };
+
+TEST_P(ErmakovRunFuncTests, Correctness) {
+  ExecuteTest(GetParam());
+}
+
+namespace {
 
 const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 3, 4, 5}, 0),
@@ -63,22 +60,30 @@ const std::array<TestType, 9> kTestParam = {
     std::make_tuple(std::vector<int>{1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8}, 8),
 };
 
-namespace {
-
-TEST_P(ErmakovANumbViolElemVecFuncTests, NumbViolElemVec) {
-  ExecuteTest(GetParam());
-}
-
-const auto kTestTasksList = std::tuple_cat(
+const auto kTestTasks = std::tuple_cat(
     ppc::util::AddFuncTask<ErmakovANumbViolElemVecMPI, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec),
     ppc::util::AddFuncTask<ErmakovANumbViolElemVecSEQ, InType>(kTestParam, PPC_SETTINGS_ermakov_a_numb_viol_elem_vec));
 
-const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
+const auto kGtestValues = ppc::util::ExpandToValues(kTestTasks);
 
-const auto kFuncTestName = ErmakovANumbViolElemVecFuncTests::PrintFuncTestName<ErmakovANumbViolElemVecFuncTests>;
+const auto kTestNameGen = ErmakovRunFuncTests::PrintFuncTestName<ErmakovRunFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(NumViolElemVec, ErmakovANumbViolElemVecFuncTests, kGtestValues, kFuncTestName);
+using ParamType = ErmakovRunFuncTests::ParamType;
+
+::testing::internal::ParamGenerator<ParamType> ErmakovGenerator() {
+  return kGtestValues;
+}
+
+std::string ErmakovNameGen(const ::testing::TestParamInfo<ParamType> &info) {
+  return kTestNameGen(info);
+}
+
+const int kErmakovDummy =
+    ::testing::UnitTest::GetInstance()
+        ->parameterized_test_registry()
+        .GetTestSuitePatternHolder<ErmakovRunFuncTests>("ErmakovRunFuncTests",
+                                                        ::testing::internal::CodeLocation(__FILE__, __LINE__))
+        ->AddTestSuiteInstantiation("FuncTests", &ErmakovGenerator, &ErmakovNameGen, __FILE__, __LINE__);
 
 }  // namespace
-
 }  // namespace ermakov_a_numb_viol_elem_vec
