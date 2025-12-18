@@ -2,7 +2,7 @@
 
 #include <mpi.h>
 
-#include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "ermakov_a_ring/common/include/common.hpp"
@@ -33,60 +33,56 @@ bool ErmakovATestTaskMPI::RunImpl() {
 
   const auto &input = GetInput();
   std::vector<int> payload = input.data;
-
   const int src = ((input.source % size) + size) % size;
   const int dst = ((input.dest % size) + size) % size;
 
-  std::vector<int> path;
-
   const int cw_dist = (dst - src + size) % size;
   const int cc_dist = (src - dst + size) % size;
-  const bool clockwise = (cw_dist <= cc_dist);
-  const int steps = clockwise ? cw_dist : cc_dist;
 
-  const int next = clockwise ? (rank + 1) % size : (rank - 1 + size) % size;
-  const int prev = clockwise ? (rank - 1 + size) % size : (rank + 1) % size;
+  bool clockwise = (cw_dist <= cc_dist);
+  int steps = cc_dist;
+  int next = (rank - 1 + size) % size;
+  int prev = (rank + 1) % size;
+  int dist_from_src = (src - rank + size) % size;
 
-  const int dist_from_src = clockwise ? (rank - src + size) % size : (src - rank + size) % size;
+  if (clockwise) {
+    steps = cw_dist;
+    next = (rank + 1) % size;
+    prev = (rank - 1 + size) % size;
+    dist_from_src = (rank - src + size) % size;
+  }
 
-  if (src == dst) {
-    if (rank == src) {
-      path = {src};
-    }
-  } else {
-    if (rank == src) {
-      path = {src};
+  std::vector<int> path;
+  if (rank == src) {
+    path.push_back(src);
+    if (src != dst) {
       const int path_sz = static_cast<int>(path.size());
       const int data_sz = static_cast<int>(payload.size());
-
       MPI_Send(payload.data(), data_sz, MPI_INT, next, 100, MPI_COMM_WORLD);
       MPI_Send(&path_sz, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
       MPI_Send(path.data(), path_sz, MPI_INT, next, 1, MPI_COMM_WORLD);
-    } else if (dist_from_src > 0 && dist_from_src <= steps) {
-      int path_sz = 0;
-      const int data_sz = static_cast<int>(payload.size());
-
-      MPI_Recv(payload.data(), data_sz, MPI_INT, prev, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(&path_sz, 1, MPI_INT, prev, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      path.resize(static_cast<size_t>(path_sz));
-      MPI_Recv(path.data(), path_sz, MPI_INT, prev, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-      path.push_back(rank);
-
-      if (rank != dst) {
-        const int next_path_sz = static_cast<int>(path.size());
-        MPI_Send(payload.data(), data_sz, MPI_INT, next, 100, MPI_COMM_WORLD);
-        MPI_Send(&next_path_sz, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
-        MPI_Send(path.data(), next_path_sz, MPI_INT, next, 1, MPI_COMM_WORLD);
-      }
     }
   }
 
-  int final_path_sz = 0;
-  if (rank == dst) {
-    final_path_sz = static_cast<int>(path.size());
+  bool is_in_path = (dist_from_src > 0 && dist_from_src <= steps);
+  if (is_in_path) {
+    int path_sz = 0;
+    const int data_sz = static_cast<int>(payload.size());
+    MPI_Recv(payload.data(), data_sz, MPI_INT, prev, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(&path_sz, 1, MPI_INT, prev, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    path.resize(static_cast<size_t>(path_sz));
+    MPI_Recv(path.data(), path_sz, MPI_INT, prev, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    path.push_back(rank);
+
+    if (rank != dst) {
+      const int next_path_sz = static_cast<int>(path.size());
+      MPI_Send(payload.data(), data_sz, MPI_INT, next, 100, MPI_COMM_WORLD);
+      MPI_Send(&next_path_sz, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
+      MPI_Send(path.data(), next_path_sz, MPI_INT, next, 1, MPI_COMM_WORLD);
+    }
   }
 
+  int final_path_sz = static_cast<int>(path.size());
   MPI_Bcast(&final_path_sz, 1, MPI_INT, dst, MPI_COMM_WORLD);
   if (rank != dst) {
     path.resize(static_cast<size_t>(final_path_sz));
@@ -94,7 +90,6 @@ bool ErmakovATestTaskMPI::RunImpl() {
   MPI_Bcast(path.data(), final_path_sz, MPI_INT, dst, MPI_COMM_WORLD);
 
   GetOutput() = path;
-
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }

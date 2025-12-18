@@ -3,7 +3,9 @@
 #include <mpi.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 #include "ermakov_a_ring/common/include/common.hpp"
@@ -25,10 +27,7 @@ bool RunLocalLogic(ErmakovATestTaskSEQ *task, const int s, const int d) {
   const int fwd = (d - s + v_size) % v_size;
   const int bwd = (s - d + v_size) % v_size;
 
-  bool go_fwd = false;
-  if (fwd <= bwd) {
-    go_fwd = true;
-  }
+  bool go_fwd = (fwd <= bwd);
 
   std::vector<int> res;
   int curr = s;
@@ -57,10 +56,10 @@ bool RunMpiTopologyLogic(ErmakovATestTaskSEQ *task, const int s_idx, const int d
   const int d = d_idx % w_size;
   auto payload = task->GetInput().data;
 
-  int dims[1] = {w_size};
-  int periods[1] = {1};
+  std::array<int, 1> dims = {w_size};
+  std::array<int, 1> periods = {1};
   MPI_Comm ring_comm = MPI_COMM_NULL;
-  MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, 0, &ring_comm);
+  MPI_Cart_create(MPI_COMM_WORLD, 1, dims.data(), periods.data(), 0, &ring_comm);
 
   int l_peer = 0;
   int r_peer = 0;
@@ -69,63 +68,46 @@ bool RunMpiTopologyLogic(ErmakovATestTaskSEQ *task, const int s_idx, const int d
   const int r_dist = (d - s + w_size) % w_size;
   const int l_dist = (s - d + w_size) % w_size;
 
-  bool move_r = false;
-  if (r_dist <= l_dist) {
-    move_r = true;
-  }
+  bool move_r = (r_dist <= l_dist);
+  int nxt = l_peer;
+  int prv = r_peer;
+  int steps_total = l_dist;
+  int my_dist = (s - w_rank + w_size) % w_size;
 
-  int nxt = 0;
-  int prv = 0;
-  int steps_total = 0;
   if (move_r) {
     nxt = r_peer;
     prv = l_peer;
     steps_total = r_dist;
-  } else {
-    nxt = l_peer;
-    prv = r_peer;
-    steps_total = l_dist;
+    my_dist = (w_rank - s + w_size) % w_size;
   }
 
   std::vector<int> path;
-  if (s == d) {
-    if (w_rank == s) {
-      path = {s};
-    }
-  } else {
-    int my_dist = 0;
-    if (move_r) {
-      my_dist = (w_rank - s + w_size) % w_size;
-    } else {
-      my_dist = (s - w_rank + w_size) % w_size;
-    }
-
-    if (w_rank == s) {
-      path = {s};
-      MPI_Send(payload.data(), static_cast<int>(payload.size()), MPI_INT, nxt, 100, ring_comm);
+  if (w_rank == s) {
+    path.push_back(s);
+    if (s != d) {
       const int psz = static_cast<int>(path.size());
+      MPI_Send(payload.data(), static_cast<int>(payload.size()), MPI_INT, nxt, 100, ring_comm);
       MPI_Send(&psz, 1, MPI_INT, nxt, 10, ring_comm);
       MPI_Send(path.data(), psz, MPI_INT, nxt, 11, ring_comm);
-    } else if (my_dist > 0 && my_dist <= steps_total) {
-      MPI_Recv(payload.data(), static_cast<int>(payload.size()), MPI_INT, prv, 100, ring_comm, MPI_STATUS_IGNORE);
-      int in_sz = 0;
-      MPI_Recv(&in_sz, 1, MPI_INT, prv, 10, ring_comm, MPI_STATUS_IGNORE);
-      path.resize(static_cast<size_t>(in_sz));
-      MPI_Recv(path.data(), in_sz, MPI_INT, prv, 11, ring_comm, MPI_STATUS_IGNORE);
-      path.push_back(w_rank);
-      if (w_rank != d) {
-        MPI_Send(payload.data(), static_cast<int>(payload.size()), MPI_INT, nxt, 100, ring_comm);
-        const int out_sz = static_cast<int>(path.size());
-        MPI_Send(&out_sz, 1, MPI_INT, nxt, 10, ring_comm);
-        MPI_Send(path.data(), out_sz, MPI_INT, nxt, 11, ring_comm);
-      }
     }
   }
 
-  int total_len = 0;
-  if (w_rank == d) {
-    total_len = static_cast<int>(path.size());
+  if (my_dist > 0 && my_dist <= steps_total) {
+    int in_sz = 0;
+    MPI_Recv(payload.data(), static_cast<int>(payload.size()), MPI_INT, prv, 100, ring_comm, MPI_STATUS_IGNORE);
+    MPI_Recv(&in_sz, 1, MPI_INT, prv, 10, ring_comm, MPI_STATUS_IGNORE);
+    path.resize(static_cast<size_t>(in_sz));
+    MPI_Recv(path.data(), in_sz, MPI_INT, prv, 11, ring_comm, MPI_STATUS_IGNORE);
+    path.push_back(w_rank);
+    if (w_rank != d) {
+      const int out_sz = static_cast<int>(path.size());
+      MPI_Send(payload.data(), static_cast<int>(payload.size()), MPI_INT, nxt, 100, ring_comm);
+      MPI_Send(&out_sz, 1, MPI_INT, nxt, 10, ring_comm);
+      MPI_Send(path.data(), out_sz, MPI_INT, nxt, 11, ring_comm);
+    }
   }
+
+  int total_len = static_cast<int>(path.size());
   MPI_Bcast(&total_len, 1, MPI_INT, d, ring_comm);
   if (w_rank != d) {
     path.resize(static_cast<size_t>(total_len));

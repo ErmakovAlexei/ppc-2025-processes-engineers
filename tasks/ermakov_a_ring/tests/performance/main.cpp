@@ -32,10 +32,7 @@ static OutType CalculateExpectedPath(const InType &input, int size) {
 
   const int clockwise_dist = (dst - src + size) % size;
   const int counter_dist = (src - dst + size) % size;
-  bool use_clockwise = false;
-  if (clockwise_dist <= counter_dist) {
-    use_clockwise = true;
-  }
+  bool use_clockwise = (clockwise_dist <= counter_dist);
 
   int cur = src;
   int steps = 0;
@@ -58,12 +55,12 @@ static OutType CalculateExpectedPath(const InType &input, int size) {
 
 class ErmakovARingPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
-  InType input_data_{0, 0, {}};
+  InType input_data{0, 0, {}};
 
   void SetUp() override {
-    input_data_.source = kDefaultSource;
-    input_data_.dest = kDefaultDest;
-    input_data_.data = std::vector<int>(static_cast<size_t>(kDataSize), 1);
+    input_data.source = kDefaultSource;
+    input_data.dest = kDefaultDest;
+    input_data.data = std::vector<int>(static_cast<size_t>(kDataSize), 1);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
@@ -71,21 +68,21 @@ class ErmakovARingPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType
     if (ppc::util::IsUnderMpirun()) {
       int initialized = 0;
       MPI_Initialized(&initialized);
-      if (initialized) {
+      if (initialized != 0) {
         MPI_Comm_size(MPI_COMM_WORLD, &size);
       }
     }
 
     if (size <= 0) {
-      size = std::max(input_data_.source, input_data_.dest) + 1;
+      size = std::max(input_data.source, input_data.dest) + 1;
     }
 
-    OutType expected = CalculateExpectedPath(input_data_, size);
+    OutType expected = CalculateExpectedPath(input_data, size);
     return output_data == expected;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_data;
   }
 };
 
