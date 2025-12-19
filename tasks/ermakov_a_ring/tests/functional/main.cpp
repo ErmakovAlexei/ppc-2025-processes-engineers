@@ -91,11 +91,14 @@ class ErmakovARingFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType
   InType input_;
 };
 
-const std::array<FuncTestType, 6> kRingTestParams = {
+const std::array<FuncTestType, 13> kRingTestParams = {
     FuncTestType{InType{0, 1, {1, 2, 3}}, "0_to_1"},    FuncTestType{InType{0, 0, {10, 20}}, "0_to_0"},
     FuncTestType{InType{1, 0, {7, 8, 9}}, "1_to_0"},    FuncTestType{InType{2, 4, {4, 5, 6}}, "2_to_4"},
     FuncTestType{InType{3, 0, {11, 12, 13}}, "3_to_0"}, FuncTestType{InType{0, 3, {14, 15, 16}}, "0_to_3"},
-};
+    FuncTestType{InType{0, 2, {}}, "0_to_2"},           FuncTestType{InType{0, 10, {1, 2, 3}}, "0_to_10"},
+    FuncTestType{InType{10, 1, {99}}, "10_to_1"},       FuncTestType{InType{5, 2, {7, 8}}, "5_to_2"},
+    FuncTestType{InType{1, 5, {10, 20}}, "1_to_5"},     FuncTestType{InType{50, 51, {5}}, "50_to_51"},
+    FuncTestType{InType{51, 50, {5}}, "51_to_50"}};
 
 namespace {
 
