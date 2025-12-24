@@ -13,7 +13,7 @@ namespace ermakov_a_quick_sort_betcher {
 
 class ErmakovAQuickSortBetcherRunPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
-  const int k_count = 65536;
+  const int k_count = 2097152;
   InType input_data;
 
   void SetUp() override {

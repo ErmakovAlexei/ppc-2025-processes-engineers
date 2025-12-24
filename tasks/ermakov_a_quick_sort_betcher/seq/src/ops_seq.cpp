@@ -65,7 +65,7 @@ bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
     return true;
   }
 
-  if (IsPowerOfTwo(GetOutput().size()) && GetOutput().size() < 100000) {
+  if (IsPowerOfTwo(GetOutput().size())) {
     DoBatcherSort();
   } else {
     DoStdSort();
