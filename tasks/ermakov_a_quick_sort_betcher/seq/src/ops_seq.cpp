@@ -1,13 +1,24 @@
 #include "ermakov_a_quick_sort_betcher/seq/include/ops_seq.hpp"
 
 #include <algorithm>
-#include <limits>
+#include <cstddef>
 #include <vector>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace ermakov_a_quick_sort_betcher {
+
+namespace {
+
+static void CompareAndSwap(std::vector<int> &data, int idx1, int idx2, int block) {
+  if ((idx1 / block) == (idx2 / block)) {
+    if (data[idx1] > data[idx2]) {
+      std::swap(data[idx1], data[idx2]);
+    }
+  }
+}
+
+}  // namespace
 
 ErmakovAQuickSortBetcherTestTaskSEQ::ErmakovAQuickSortBetcherTestTaskSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -24,34 +35,28 @@ bool ErmakovAQuickSortBetcherTestTaskSEQ::PreProcessingImpl() {
   return true;
 }
 
-// Вспомогательная функция проверки степени двойки
-bool ErmakovAQuickSortBetcherTestTaskSEQ::is_power_of_two(size_t n) {
+bool ErmakovAQuickSortBetcherTestTaskSEQ::IsPowerOfTwo(std::size_t n) {
   return (n > 0) && ((n & (n - 1)) == 0);
 }
 
-// Ветка Бэтчера
-void ErmakovAQuickSortBetcherTestTaskSEQ::do_batcher_sort() {
+void ErmakovAQuickSortBetcherTestTaskSEQ::DoBatcherSort() {
   auto &data = GetOutput();
-  int N = static_cast<int>(data.size());
-  for (int p = 1; p < N; p <<= 1) {
-    for (int k = p; k > 0; k >>= 1) {
-      for (int j = k % p; j <= N - 1 - k; j += 2 * k) {
-        for (int i = 0; i < k; ++i) {
+  int n = static_cast<int>(data.size());
+
+  for (int phase = 1; phase < n; phase <<= 1) {
+    for (int step = phase; step > 0; step >>= 1) {
+      for (int j = step % phase; j <= n - 1 - step; j += 2 * step) {
+        for (int i = 0; i < step; ++i) {
           int idx1 = j + i;
-          int idx2 = j + i + k;
-          if ((idx1 / (p * 2)) == (idx2 / (p * 2))) {
-            if (data[idx1] > data[idx2]) {
-              std::swap(data[idx1], data[idx2]);
-            }
-          }
+          int idx2 = j + i + step;
+          CompareAndSwap(data, idx1, idx2, phase * 2);
         }
       }
     }
   }
 }
 
-// Ветка Быстрой сортировки (через std::sort)
-void ErmakovAQuickSortBetcherTestTaskSEQ::do_std_sort() {
+void ErmakovAQuickSortBetcherTestTaskSEQ::DoStdSort() {
   std::sort(GetOutput().begin(), GetOutput().end());
 }
 
@@ -60,18 +65,16 @@ bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
     return true;
   }
 
-  // Решаем, какой алгоритм использовать
-  if (is_power_of_two(GetOutput().size()) && GetOutput().size() < 100000) {
-    do_batcher_sort();
+  if (IsPowerOfTwo(GetOutput().size()) && GetOutput().size() < 100000) {
+    DoBatcherSort();
   } else {
-    do_std_sort();
+    DoStdSort();
   }
 
   return true;
 }
 
 bool ErmakovAQuickSortBetcherTestTaskSEQ::PostProcessingImpl() {
-  // Просто возвращаем результат
   return true;
 }
 

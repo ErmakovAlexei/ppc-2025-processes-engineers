@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <random>
-#include <vector>
+#include <ranges>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
 #include "ermakov_a_quick_sort_betcher/mpi/include/ops_mpi.hpp"
@@ -14,30 +14,31 @@ namespace ermakov_a_quick_sort_betcher {
 
 class ErmakovAQuickSortBetcherRunPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
-  const int kCount_ = 65536;
-  InType input_data_;
+  const int k_count = 65536;
+  InType input_data;
 
   void SetUp() override {
-    input_data_.resize(kCount_);
-    std::mt19937 gen((std::random_device()()));
+    input_data.resize(k_count);
+    std::mt19937 gen(std::random_device{}());
 
-    for (int i = 0; i < kCount_; ++i) {
-      input_data_[i] = static_cast<int>(gen() % 10000);
+    for (int i = 0; i < k_count; ++i) {
+      input_data[i] = static_cast<int>(gen() % 10000);
     }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    int rank;
+    int rank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     if (rank != 0) {
       return true;
     }
 
-    return std::is_sorted(output_data.begin(), output_data.end());
+    return std::ranges::is_sorted(output_data);
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_data;
   }
 };
 

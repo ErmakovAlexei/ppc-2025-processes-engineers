@@ -20,15 +20,15 @@ class ErmakovAQuickSortBetcherTestTaskMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  std::vector<int> local_vec;
-  std::vector<int> remote_data;
-  std::vector<int> temp_data;
+  std::vector<int> local_vec_;
+  std::vector<int> remote_data_;
+  std::vector<int> temp_data_;
 
-  int world_size;
-  int world_rank;
+  int world_size_{0};
+  int world_rank_{0};
 
-  void compare_split_low(int partner);
-  void compare_split_high(int partner);
+  void CompareSplitLow(int partner);
+  void CompareSplitHigh(int partner);
 };
 
 }  // namespace ermakov_a_quick_sort_betcher

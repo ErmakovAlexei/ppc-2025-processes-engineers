@@ -2,15 +2,17 @@
 #include <mpi.h>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <random>
+#include <ranges>
 #include <string>
-#include <vector>
+#include <tuple>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
 #include "ermakov_a_quick_sort_betcher/mpi/include/ops_mpi.hpp"
 #include "ermakov_a_quick_sort_betcher/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
-#include "util/include/util.hpp"
 
 namespace ermakov_a_quick_sort_betcher {
 
@@ -23,8 +25,9 @@ class ErmakovAQuickSortBetcherRunFuncTests : public ppc::util::BaseRunFuncTests<
  protected:
   void SetUp() override {
     TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    int n = std::get<0>(params);
-    std::string desc = std::get<1>(params);
+
+    const int n = std::get<0>(params);
+    const std::string &desc = std::get<1>(params);
 
     input_data_.resize(n);
 
@@ -37,9 +40,9 @@ class ErmakovAQuickSortBetcherRunFuncTests : public ppc::util::BaseRunFuncTests<
         input_data_[i] = n - i;
       }
     } else if (n > 0) {
-      std::random_device rd;
-      std::mt19937 gen(rd());
+      std::mt19937 gen(std::random_device{}());
       std::uniform_int_distribution<> dis(-1000, 1000);
+
       for (int i = 0; i < n; ++i) {
         input_data_[i] = dis(gen);
       }
@@ -50,21 +53,20 @@ class ErmakovAQuickSortBetcherRunFuncTests : public ppc::util::BaseRunFuncTests<
     int rank = 0;
     int is_mpi_initialized = 0;
 
-    // Проверяем, запущен ли MPI
     MPI_Initialized(&is_mpi_initialized);
 
-    if (is_mpi_initialized) {
+    if (is_mpi_initialized != 0) {
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     }
 
-    // В MPI только Rank 0 делает проверку. В SEQ rank всегда 0.
     if (rank != 0) {
       return true;
     }
 
     OutType reference = input_data_;
-    std::sort(reference.begin(), reference.end());
-    return (reference == output_data);
+    std::ranges::sort(reference);
+
+    return reference == output_data;
   }
 
   InType GetTestInputData() final {
@@ -92,6 +94,7 @@ const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<ErmakovAQuickS
                                                kTestParam, PPC_SETTINGS_ermakov_a_quick_sort_betcher));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
+
 const auto kPerfTestName =
     ErmakovAQuickSortBetcherRunFuncTests::PrintFuncTestName<ErmakovAQuickSortBetcherRunFuncTests>;
 
