@@ -5,7 +5,6 @@
 #include <array>
 #include <cstddef>
 #include <random>
-#include <ranges>
 #include <string>
 #include <tuple>
 
@@ -13,6 +12,7 @@
 #include "ermakov_a_quick_sort_betcher/mpi/include/ops_mpi.hpp"
 #include "ermakov_a_quick_sort_betcher/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
+#include "util/include/util.hpp"
 
 namespace ermakov_a_quick_sort_betcher {
 

@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <random>
-#include <ranges>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
 #include "ermakov_a_quick_sort_betcher/mpi/include/ops_mpi.hpp"

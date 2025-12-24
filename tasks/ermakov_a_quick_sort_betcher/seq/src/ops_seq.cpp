@@ -10,7 +10,7 @@ namespace ermakov_a_quick_sort_betcher {
 
 namespace {
 
-static void CompareAndSwap(std::vector<int> &data, int idx1, int idx2, int block) {
+void CompareAndSwap(std::vector<int> &data, int idx1, int idx2, int block) {
   if ((idx1 / block) == (idx2 / block)) {
     if (data[idx1] > data[idx2]) {
       std::swap(data[idx1], data[idx2]);
@@ -57,7 +57,7 @@ void ErmakovAQuickSortBetcherTestTaskSEQ::DoBatcherSort() {
 }
 
 void ErmakovAQuickSortBetcherTestTaskSEQ::DoStdSort() {
-  std::sort(GetOutput().begin(), GetOutput().end());
+  std::ranges::sort(GetOutput());
 }
 
 bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
