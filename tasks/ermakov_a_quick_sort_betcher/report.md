@@ -34,12 +34,13 @@
 
 ## 3. Базовый алгоритм (последовательный)
 
-В SEQ версии алгоритм работает следующим образом:
-1. Проверяется, является ли размер массива степенью двойки (`IsPowerOfTwo`).
-2. Если да, применяется **DoBatcherSort**:
-   - Алгоритм проходит через фазы и шаги сети Бэтчера.
-   - Внутри каждой фазы выполняются **CompareAndSwap** между элементами одного блока.
-3. В противном случае используется стандартная сортировка `std::ranges::sort`.
+В SEQ версии реализован гибридный алгоритм:
+1. Если размер массива является степенью двойки:
+   - Массив делится на две равные части.
+   - Каждая часть сортируется независимо с помощью ручной реализации **QuickSort** (схема Хоара).
+   - Затем обе отсортированные части объединяются в единый массив с помощью **сети слияния Бэтчера** (DoBatcherSort). Это позволяет эффективно использовать структуру сети для уже частично упорядоченных данных.
+2. Если размер массива не является степенью двойки:
+   - Весь массив сортируется с использованием ручной реализации **QuickSort**.
 
 ---
 
@@ -47,9 +48,10 @@
 
 MPI версия реализует параллельную сеть Бэтчера:
 - **Распределение данных:** Массив делится на сегменты для каждого процесса (`MPI_Scatter`), при необходимости данные дополняются `INT_MAX`.
-- **Локальная сортировка:** Каждый процесс сортирует свой сегмент с помощью `std::ranges::sort`.
+- **Локальная сортировка:** Каждый процесс сортирует свой сегмент, используя ручную реализацию **QuickSort**.
 - **Сеть Бэтчера (CompareSplit):**
-  - На каждом шаге процессы обмениваются данными с партнёрами (`MPI_Sendrecv`).
+  - Процессы выполняют итеративное слияние сегментов.
+  - На каждом шаге процессы обмениваются данными (`MPI_Sendrecv`).
   - Процесс с меньшим рангом оставляет меньшие элементы (`CompareSplitLow`), процесс с большим - большие (`CompareSplitHigh`).
 - **Сбор результата:** Отсортированные сегменты собираются на процессе 0 (`MPI_Gather`).
 
@@ -89,7 +91,7 @@ MPI версия реализует параллельную сеть Бэтче
 ## 7. Результаты и обсуждение
 
 ### 7.1 Корректность
-Тестирование проводилось на массивах разного размера. В SEQ версии корректность обеспечивается сетью Бэтчера или стандартной сортировкой. MPI версия корректно сортирует данные при любом числе процессов, включая массивы, размер которых не является степенью двойки.
+Тестирование проводилось на массиве одного размера. В SEQ версии корректность обеспечивается сетью Бэтчера и быстрой сортировкой. MPI версия корректно сортирует данные при любом числе процессов, включая массивы, размер которых не является степенью двойки.
 
 ### 7.2 Производительность
 
@@ -134,26 +136,70 @@ MPI версия реализует параллельную сеть Бэтче
 ## Фрагмент кода (SEQ)
 
 ```cpp
-void ErmakovAQuickSortBetcherTestTaskSEQ::DoBatcherSort() {
-  auto &data = GetOutput();
-  int n = static_cast<int>(data.size());
-
-  for (int phase = 1; phase < n; phase <<= 1) {
-    for (int step = phase; step > 0; step >>= 1) {
-      for (int j = step % phase; j <= n - 1 - step; j += 2 * step) {
-        for (int i = 0; i < step; ++i) {
-          int idx1 = j + i;
-          int idx2 = j + i + step;
-          CompareAndSwap(data, idx1, idx2, phase * 2);
-        }
-      }
+void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int>& arr, int left, int right) {
+  if (left >= right) return;
+  int pivot = arr[left + (right - left) / 2];
+  int i = left, j = right;
+  while (i <= j) {
+    while (arr[i] < pivot) i++;
+    while (arr[j] > pivot) j--;
+    if (i <= j) {
+      std::swap(arr[i++], arr[j--]);
     }
   }
+  if (left < j) QuickSort(arr, left, j);
+  if (i < right) QuickSort(arr, i, right);
+}
+
+bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
+  if (GetOutput().empty()) return true;
+  int n = static_cast<int>(GetOutput().size());
+
+  if (IsPowerOfTwo(n)) {
+    int mid = n / 2;
+    QuickSort(GetOutput(), 0, mid - 1);
+    QuickSort(GetOutput(), mid, n - 1);
+    DoBatcherSort(); 
+  } else {
+    QuickSort(GetOutput(), 0, n - 1);
+  }
+  return true;
 }
 ```
 
 ## Фрагмент кода (MPI)
 ```cpp
+void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int left, int right) {
+  if (left >= right) {
+    return;
+  }
+
+  int pivot = arr[left + (right - left) / 2];
+  int i = left;
+  int j = right;
+
+  while (i <= j) {
+    while (arr[i] < pivot) {
+      i++;
+    }
+    while (arr[j] > pivot) {
+      j--;
+    }
+    if (i <= j) {
+      std::swap(arr[i], arr[j]);
+      i++;
+      j--;
+    }
+  }
+
+  if (left < j) {
+    QuickSort(arr, left, j);
+  }
+  if (i < right) {
+    QuickSort(arr, i, right);
+  }
+}
+
 void ErmakovAQuickSortBetcherTestTaskMPI::CompareSplitLow(int partner) {
   const int size = static_cast<int>(local_vec_.size());
 
@@ -250,7 +296,9 @@ bool ErmakovAQuickSortBetcherTestTaskMPI::RunImpl() {
   MPI_Scatter(world_rank_ == 0 ? full_vec.data() : nullptr, elements_per_proc, MPI_INT, local_vec_.data(),
               elements_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
 
-  std::ranges::sort(local_vec_);
+  if (!local_vec_.empty()) {
+    QuickSort(local_vec_, 0, static_cast<int>(local_vec_.size()) - 1);
+  }
 
   int next_power_of_two = 1;
   while (next_power_of_two < world_size_) {

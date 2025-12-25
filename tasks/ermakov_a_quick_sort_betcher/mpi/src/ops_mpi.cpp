@@ -31,6 +31,37 @@ bool ErmakovAQuickSortBetcherTestTaskMPI::PreProcessingImpl() {
   return true;
 }
 
+void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int left, int right) {
+  if (left >= right) {
+    return;
+  }
+
+  int pivot = arr[left + (right - left) / 2];
+  int i = left;
+  int j = right;
+
+  while (i <= j) {
+    while (arr[i] < pivot) {
+      i++;
+    }
+    while (arr[j] > pivot) {
+      j--;
+    }
+    if (i <= j) {
+      std::swap(arr[i], arr[j]);
+      i++;
+      j--;
+    }
+  }
+
+  if (left < j) {
+    QuickSort(arr, left, j);
+  }
+  if (i < right) {
+    QuickSort(arr, i, right);
+  }
+}
+
 void ErmakovAQuickSortBetcherTestTaskMPI::CompareSplitLow(int partner) {
   const int size = static_cast<int>(local_vec_.size());
 
@@ -127,7 +158,9 @@ bool ErmakovAQuickSortBetcherTestTaskMPI::RunImpl() {
   MPI_Scatter(world_rank_ == 0 ? full_vec.data() : nullptr, elements_per_proc, MPI_INT, local_vec_.data(),
               elements_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
 
-  std::ranges::sort(local_vec_);
+  if (!local_vec_.empty()) {
+    QuickSort(local_vec_, 0, static_cast<int>(local_vec_.size()) - 1);
+  }
 
   int next_power_of_two = 1;
   while (next_power_of_two < world_size_) {

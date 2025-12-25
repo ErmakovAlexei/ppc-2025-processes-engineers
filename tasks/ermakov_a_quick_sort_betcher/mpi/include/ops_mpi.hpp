@@ -31,6 +31,7 @@ class ErmakovAQuickSortBetcherTestTaskMPI : public BaseTask {
   void CompareSplitHigh(int partner);
   void RunBatcherNetwork(int next_power_of_two);
   void RunBatcherStep(int phase, int step, int next_power_of_two);
+  void QuickSort(std::vector<int> &arr, int left, int right);
 };
 
 }  // namespace ermakov_a_quick_sort_betcher
