@@ -24,7 +24,7 @@ class ErmakovAQuickSortBetcherTestTaskSEQ : public BaseTask {
 
   void DoBatcherSort();
   static bool IsPowerOfTwo(std::size_t n);
-  void QuickSort(std::vector<int> &arr, int left, int right);
+  static void QuickSort(std::vector<int> &arr, int left, int right);
 };
 
 }  // namespace ermakov_a_quick_sort_betcher

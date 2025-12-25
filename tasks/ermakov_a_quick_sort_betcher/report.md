@@ -146,40 +146,40 @@ void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int> &arr, int l
   }
 
   std::stack<std::pair<int, int>> stack;
-  stack.push({left, right});
+  stack.emplace(left, right);
 
   while (!stack.empty()) {
-    std::pair<int, int> range = stack.top();
+    const auto [l_bound, r_bound] = stack.top();
     stack.pop();
 
-    int l_bound = range.first;
-    int r_bound = range.second;
     if (l_bound >= r_bound) {
       continue;
     }
 
-    int pivot = arr[l_bound + ((r_bound - l_bound) / 2)];
+    const int pivot = arr[l_bound + (r_bound - l_bound) / 2];
     int i_idx = l_bound;
     int j_idx = r_bound;
 
     while (i_idx <= j_idx) {
       while (arr[i_idx] < pivot) {
-        i_idx++;
+        ++i_idx;
       }
       while (arr[j_idx] > pivot) {
-        j_idx--;
+        --j_idx;
       }
+
       if (i_idx <= j_idx) {
         std::swap(arr[i_idx], arr[j_idx]);
-        i_idx++;
-        j_idx--;
+        ++i_idx;
+        --j_idx;
       }
     }
+
     if (l_bound < j_idx) {
-      stack.push({l_bound, j_idx});
+      stack.emplace(l_bound, j_idx);
     }
     if (i_idx < r_bound) {
-      stack.push({i_idx, r_bound});
+      stack.emplace(i_idx, r_bound);
     }
   }
 }
@@ -229,42 +229,40 @@ void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int l
   }
 
   std::stack<std::pair<int, int>> s;
-  s.push({left, right});
+  s.emplace(left, right);
 
   while (!s.empty()) {
-    std::pair<int, int> range = s.top();
+    const auto [l, r] = s.top();
     s.pop();
-
-    int l = range.first;
-    int r = range.second;
 
     if (l >= r) {
       continue;
     }
 
-    int pivot = arr[l + ((r - l) / 2)];
+    const int pivot = arr[l + (r - l) / 2];
     int i = l;
     int j = r;
 
     while (i <= j) {
       while (arr[i] < pivot) {
-        i++;
+        ++i;
       }
       while (arr[j] > pivot) {
-        j--;
+        --j;
       }
+
       if (i <= j) {
         std::swap(arr[i], arr[j]);
-        i++;
-        j--;
+        ++i;
+        --j;
       }
     }
 
     if (l < j) {
-      s.push({l, j});
+      s.emplace(l, j);
     }
     if (i < r) {
-      s.push({i, r});
+      s.emplace(i, r);
     }
   }
 }

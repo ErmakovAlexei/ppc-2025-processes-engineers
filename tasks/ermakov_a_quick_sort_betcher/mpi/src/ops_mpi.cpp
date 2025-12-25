@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <limits>
 #include <stack>
+#include <utility>
 #include <vector>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
@@ -38,42 +39,40 @@ void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int l
   }
 
   std::stack<std::pair<int, int>> s;
-  s.push({left, right});
+  s.emplace(left, right);
 
   while (!s.empty()) {
-    std::pair<int, int> range = s.top();
+    const auto [l, r] = s.top();
     s.pop();
-
-    int l = range.first;
-    int r = range.second;
 
     if (l >= r) {
       continue;
     }
 
-    int pivot = arr[l + ((r - l) / 2)];
+    const int pivot = arr[l + (r - l) / 2];
     int i = l;
     int j = r;
 
     while (i <= j) {
       while (arr[i] < pivot) {
-        i++;
+        ++i;
       }
       while (arr[j] > pivot) {
-        j--;
+        --j;
       }
+
       if (i <= j) {
         std::swap(arr[i], arr[j]);
-        i++;
-        j--;
+        ++i;
+        --j;
       }
     }
 
     if (l < j) {
-      s.push({l, j});
+      s.emplace(l, j);
     }
     if (i < r) {
-      s.push({i, r});
+      s.emplace(i, r);
     }
   }
 }
