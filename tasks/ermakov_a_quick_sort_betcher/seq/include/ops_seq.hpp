@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <vector>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
 #include "task/include/task.hpp"

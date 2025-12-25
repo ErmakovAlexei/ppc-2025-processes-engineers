@@ -2,11 +2,20 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <stack>
 #include <vector>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
 
 namespace ermakov_a_quick_sort_betcher {
+
+static void BatcherCompare(std::vector<int> &data, int idx1, int idx2, int phase) {
+  if ((idx1 / (phase * 2)) == (idx2 / (phase * 2))) {
+    if (data[idx1] > data[idx2]) {
+      std::swap(data[idx1], data[idx2]);
+    }
+  }
+}
 
 ErmakovAQuickSortBetcherTestTaskSEQ::ErmakovAQuickSortBetcherTestTaskSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -30,42 +39,57 @@ void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int> &arr, int l
   if (left >= right) {
     return;
   }
-  int pivot = arr[left + (right - left) / 2];
-  int i = left, j = right;
-  while (i <= j) {
-    while (arr[i] < pivot) {
-      i++;
+
+  std::stack<std::pair<int, int>> stack;
+  stack.push({left, right});
+
+  while (!stack.empty()) {
+    std::pair<int, int> range = stack.top();
+    stack.pop();
+
+    int l_bound = range.first;
+    int r_bound = range.second;
+    if (l_bound >= r_bound) {
+      continue;
     }
-    while (arr[j] > pivot) {
-      j--;
+
+    int pivot = arr[l_bound + ((r_bound - l_bound) / 2)];
+    int i_idx = l_bound;
+    int j_idx = r_bound;
+
+    while (i_idx <= j_idx) {
+      while (arr[i_idx] < pivot) {
+        i_idx++;
+      }
+      while (arr[j_idx] > pivot) {
+        j_idx--;
+      }
+      if (i_idx <= j_idx) {
+        std::swap(arr[i_idx], arr[j_idx]);
+        i_idx++;
+        j_idx--;
+      }
     }
-    if (i <= j) {
-      std::swap(arr[i++], arr[j--]);
+    if (l_bound < j_idx) {
+      stack.push({l_bound, j_idx});
     }
-  }
-  if (left < j) {
-    QuickSort(arr, left, j);
-  }
-  if (i < right) {
-    QuickSort(arr, i, right);
+    if (i_idx < r_bound) {
+      stack.push({i_idx, r_bound});
+    }
   }
 }
 
 void ErmakovAQuickSortBetcherTestTaskSEQ::DoBatcherSort() {
   auto &data = GetOutput();
-  int n = static_cast<int>(data.size());
+  int n_size = static_cast<int>(data.size());
 
-  for (int p = 1; p < n; p <<= 1) {
-    for (int k = p; k > 0; k >>= 1) {
-      for (int j = k % p; j <= n - 1 - k; j += 2 * k) {
-        for (int i = 0; i < k; ++i) {
-          int idx1 = j + i;
-          int idx2 = j + i + k;
-          if ((idx1 / (p * 2)) == (idx2 / (p * 2))) {
-            if (data[idx1] > data[idx2]) {
-              std::swap(data[idx1], data[idx2]);
-            }
-          }
+  for (int phase = 1; phase < n_size; phase <<= 1) {
+    for (int step = phase; step > 0; step >>= 1) {
+      for (int base_j = step % phase; base_j <= n_size - 1 - step; base_j += 2 * step) {
+        for (int offset_i = 0; offset_i < step; ++offset_i) {
+          int idx1 = base_j + offset_i;
+          int idx2 = base_j + offset_i + step;
+          BatcherCompare(data, idx1, idx2, phase);
         }
       }
     }
@@ -76,17 +100,17 @@ bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
   if (GetOutput().empty()) {
     return true;
   }
-  int n = static_cast<int>(GetOutput().size());
+  int n_size = static_cast<int>(GetOutput().size());
 
-  if (IsPowerOfTwo(n)) {
-    int mid = n / 2;
+  if (IsPowerOfTwo(n_size)) {
+    int mid = n_size / 2;
     if (mid > 0) {
       QuickSort(GetOutput(), 0, mid - 1);
-      QuickSort(GetOutput(), mid, n - 1);
+      QuickSort(GetOutput(), mid, n_size - 1);
     }
     DoBatcherSort();
   } else {
-    QuickSort(GetOutput(), 0, n - 1);
+    QuickSort(GetOutput(), 0, n_size - 1);
   }
   return true;
 }

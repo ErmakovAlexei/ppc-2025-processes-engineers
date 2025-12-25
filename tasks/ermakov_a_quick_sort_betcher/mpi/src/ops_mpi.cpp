@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <stack>
 #include <vector>
 
 #include "ermakov_a_quick_sort_betcher/common/include/common.hpp"
@@ -36,29 +37,44 @@ void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int l
     return;
   }
 
-  int pivot = arr[left + (right - left) / 2];
-  int i = left;
-  int j = right;
+  std::stack<std::pair<int, int>> s;
+  s.push({left, right});
 
-  while (i <= j) {
-    while (arr[i] < pivot) {
-      i++;
-    }
-    while (arr[j] > pivot) {
-      j--;
-    }
-    if (i <= j) {
-      std::swap(arr[i], arr[j]);
-      i++;
-      j--;
-    }
-  }
+  while (!s.empty()) {
+    std::pair<int, int> range = s.top();
+    s.pop();
 
-  if (left < j) {
-    QuickSort(arr, left, j);
-  }
-  if (i < right) {
-    QuickSort(arr, i, right);
+    int l = range.first;
+    int r = range.second;
+
+    if (l >= r) {
+      continue;
+    }
+
+    int pivot = arr[l + ((r - l) / 2)];
+    int i = l;
+    int j = r;
+
+    while (i <= j) {
+      while (arr[i] < pivot) {
+        i++;
+      }
+      while (arr[j] > pivot) {
+        j--;
+      }
+      if (i <= j) {
+        std::swap(arr[i], arr[j]);
+        i++;
+        j--;
+      }
+    }
+
+    if (l < j) {
+      s.push({l, j});
+    }
+    if (i < r) {
+      s.push({i, r});
+    }
   }
 }
 

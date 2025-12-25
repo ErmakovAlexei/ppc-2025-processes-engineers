@@ -35,25 +35,25 @@
 ## 3. Базовый алгоритм (последовательный)
 
 В SEQ версии реализован гибридный алгоритм:
-1. Если размер массива является степенью двойки:
-   - Массив делится на две равные части.
-   - Каждая часть сортируется независимо с помощью ручной реализации **QuickSort** (схема Хоара).
-   - Затем обе отсортированные части объединяются в единый массив с помощью **сети слияния Бэтчера** (DoBatcherSort). Это позволяет эффективно использовать структуру сети для уже частично упорядоченных данных.
-2. Если размер массива не является степенью двойки:
-   - Весь массив сортируется с использованием ручной реализации **QuickSort**.
+1. **Проверка размера:** Если размер массива является степенью двойки, используется гибридная схема.
+2. **Гибридная схема:**
+   - Массив делится на две половины.
+   - Каждая половина сортируется независимо с помощью **итеративного QuickSort**. Вместо рекурсии используется `std::stack` для управления границами подмассивов.
+   - Выполняется слияние отсортированных половин с помощью последовательной реализации сети Бэтчера.
+3. **Обработка произвольных размеров:**
+   - Если размер не является степенью двойки, массив сортируется итеративным QuickSort в один проход.
 
 ---
 
 ## 4. Схема параллелизации (MPI)
 
 MPI версия реализует параллельную сеть Бэтчера:
-- **Распределение данных:** Массив делится на сегменты для каждого процесса (`MPI_Scatter`), при необходимости данные дополняются `INT_MAX`.
-- **Локальная сортировка:** Каждый процесс сортирует свой сегмент, используя ручную реализацию **QuickSort**.
+- **Распределение данных:** Массив распределяется между процессами (`MPI_Scatter`). При необходимости данные дополняются значением `INT_MAX`.
+- **Локальная сортировка:** Каждый процесс выполняет **итеративный QuickSort** над своим локальным сегментом данных.
 - **Сеть Бэтчера (CompareSplit):**
-  - Процессы выполняют итеративное слияние сегментов.
-  - На каждом шаге процессы обмениваются данными (`MPI_Sendrecv`).
-  - Процесс с меньшим рангом оставляет меньшие элементы (`CompareSplitLow`), процесс с большим - большие (`CompareSplitHigh`).
-- **Сбор результата:** Отсортированные сегменты собираются на процессе 0 (`MPI_Gather`).
+  - Процессы обмениваются сегментами согласно шагам сети Бэтчера (`MPI_Sendrecv`).
+  - Процесс с меньшим рангом сохраняет меньшие элементы (`CompareSplitLow`), процесс с большим — большие элементы (`CompareSplitHigh`).
+- **Сбор результата:** Отсортированные сегменты собираются на процессе 0 (`MPI_Gather`), после чего фиктивные элементы удаляются.
 
 ---
 
@@ -136,32 +136,86 @@ MPI версия реализует параллельную сеть Бэтче
 ## Фрагмент кода (SEQ)
 
 ```cpp
-void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int>& arr, int left, int right) {
-  if (left >= right) return;
-  int pivot = arr[left + (right - left) / 2];
-  int i = left, j = right;
-  while (i <= j) {
-    while (arr[i] < pivot) i++;
-    while (arr[j] > pivot) j--;
-    if (i <= j) {
-      std::swap(arr[i++], arr[j--]);
+bool ErmakovAQuickSortBetcherTestTaskSEQ::IsPowerOfTwo(std::size_t n) {
+  return (n > 0) && ((n & (n - 1)) == 0);
+}
+
+void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int> &arr, int left, int right) {
+  if (left >= right) {
+    return;
+  }
+
+  std::stack<std::pair<int, int>> stack;
+  stack.push({left, right});
+
+  while (!stack.empty()) {
+    std::pair<int, int> range = stack.top();
+    stack.pop();
+
+    int l_bound = range.first;
+    int r_bound = range.second;
+    if (l_bound >= r_bound) {
+      continue;
+    }
+
+    int pivot = arr[l_bound + ((r_bound - l_bound) / 2)];
+    int i_idx = l_bound;
+    int j_idx = r_bound;
+
+    while (i_idx <= j_idx) {
+      while (arr[i_idx] < pivot) {
+        i_idx++;
+      }
+      while (arr[j_idx] > pivot) {
+        j_idx--;
+      }
+      if (i_idx <= j_idx) {
+        std::swap(arr[i_idx], arr[j_idx]);
+        i_idx++;
+        j_idx--;
+      }
+    }
+    if (l_bound < j_idx) {
+      stack.push({l_bound, j_idx});
+    }
+    if (i_idx < r_bound) {
+      stack.push({i_idx, r_bound});
     }
   }
-  if (left < j) QuickSort(arr, left, j);
-  if (i < right) QuickSort(arr, i, right);
+}
+
+void ErmakovAQuickSortBetcherTestTaskSEQ::DoBatcherSort() {
+  auto &data = GetOutput();
+  int n_size = static_cast<int>(data.size());
+
+  for (int phase = 1; phase < n_size; phase <<= 1) {
+    for (int step = phase; step > 0; step >>= 1) {
+      for (int base_j = step % phase; base_j <= n_size - 1 - step; base_j += 2 * step) {
+        for (int offset_i = 0; offset_i < step; ++offset_i) {
+          int idx1 = base_j + offset_i;
+          int idx2 = base_j + offset_i + step;
+          BatcherCompare(data, idx1, idx2, phase);
+        }
+      }
+    }
+  }
 }
 
 bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
-  if (GetOutput().empty()) return true;
-  int n = static_cast<int>(GetOutput().size());
+  if (GetOutput().empty()) {
+    return true;
+  }
+  int n_size = static_cast<int>(GetOutput().size());
 
-  if (IsPowerOfTwo(n)) {
-    int mid = n / 2;
-    QuickSort(GetOutput(), 0, mid - 1);
-    QuickSort(GetOutput(), mid, n - 1);
-    DoBatcherSort(); 
+  if (IsPowerOfTwo(n_size)) {
+    int mid = n_size / 2;
+    if (mid > 0) {
+      QuickSort(GetOutput(), 0, mid - 1);
+      QuickSort(GetOutput(), mid, n_size - 1);
+    }
+    DoBatcherSort();
   } else {
-    QuickSort(GetOutput(), 0, n - 1);
+    QuickSort(GetOutput(), 0, n_size - 1);
   }
   return true;
 }
@@ -174,29 +228,44 @@ void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int l
     return;
   }
 
-  int pivot = arr[left + (right - left) / 2];
-  int i = left;
-  int j = right;
+  std::stack<std::pair<int, int>> s;
+  s.push({left, right});
 
-  while (i <= j) {
-    while (arr[i] < pivot) {
-      i++;
-    }
-    while (arr[j] > pivot) {
-      j--;
-    }
-    if (i <= j) {
-      std::swap(arr[i], arr[j]);
-      i++;
-      j--;
-    }
-  }
+  while (!s.empty()) {
+    std::pair<int, int> range = s.top();
+    s.pop();
 
-  if (left < j) {
-    QuickSort(arr, left, j);
-  }
-  if (i < right) {
-    QuickSort(arr, i, right);
+    int l = range.first;
+    int r = range.second;
+
+    if (l >= r) {
+      continue;
+    }
+
+    int pivot = arr[l + ((r - l) / 2)];
+    int i = l;
+    int j = r;
+
+    while (i <= j) {
+      while (arr[i] < pivot) {
+        i++;
+      }
+      while (arr[j] > pivot) {
+        j--;
+      }
+      if (i <= j) {
+        std::swap(arr[i], arr[j]);
+        i++;
+        j--;
+      }
+    }
+
+    if (l < j) {
+      s.push({l, j});
+    }
+    if (i < r) {
+      s.push({i, r});
+    }
   }
 }
 
