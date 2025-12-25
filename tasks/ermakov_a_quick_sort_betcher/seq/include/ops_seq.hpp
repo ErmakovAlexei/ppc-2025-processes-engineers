@@ -21,8 +21,6 @@ class ErmakovAQuickSortBetcherTestTaskSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  int input_size_ = 0;
-
   void DoBatcherSort();
   static bool IsPowerOfTwo(std::size_t n);
   void QuickSort(std::vector<int> &arr, int left, int right);
