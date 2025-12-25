@@ -20,6 +20,25 @@ void BatcherCompare(std::vector<int> &data, int idx1, int idx2, int phase) {
   }
 }
 
+void Partition(std::vector<int> &arr, int left, int right, int pivot, int &i, int &j) {
+  i = left;
+  j = right;
+
+  while (i <= j) {
+    while (arr[i] < pivot) {
+      ++i;
+    }
+    while (arr[j] > pivot) {
+      --j;
+    }
+    if (i <= j) {
+      std::swap(arr[i], arr[j]);
+      ++i;
+      --j;
+    }
+  }
+}
+
 }  // namespace
 
 ErmakovAQuickSortBetcherTestTaskSEQ::ErmakovAQuickSortBetcherTestTaskSEQ(const InType &in) {
@@ -56,24 +75,11 @@ void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int> &arr, int l
       continue;
     }
 
-    const int pivot = arr[l_bound + (r_bound - l_bound) / 2];
-    int i_idx = l_bound;
-    int j_idx = r_bound;
+    const int pivot = arr[l_bound + ((r_bound - l_bound) / 2)];
+    int i_idx = 0;
+    int j_idx = 0;
 
-    while (i_idx <= j_idx) {
-      while (arr[i_idx] < pivot) {
-        ++i_idx;
-      }
-      while (arr[j_idx] > pivot) {
-        --j_idx;
-      }
-
-      if (i_idx <= j_idx) {
-        std::swap(arr[i_idx], arr[j_idx]);
-        ++i_idx;
-        --j_idx;
-      }
-    }
+    Partition(arr, l_bound, r_bound, pivot, i_idx, j_idx);
 
     if (l_bound < j_idx) {
       stack.emplace(l_bound, j_idx);
@@ -86,15 +92,13 @@ void ErmakovAQuickSortBetcherTestTaskSEQ::QuickSort(std::vector<int> &arr, int l
 
 void ErmakovAQuickSortBetcherTestTaskSEQ::DoBatcherSort() {
   auto &data = GetOutput();
-  int n_size = static_cast<int>(data.size());
+  const int n_size = static_cast<int>(data.size());
 
   for (int phase = 1; phase < n_size; phase <<= 1) {
     for (int step = phase; step > 0; step >>= 1) {
-      for (int base_j = step % phase; base_j <= n_size - 1 - step; base_j += 2 * step) {
-        for (int offset_i = 0; offset_i < step; ++offset_i) {
-          int idx1 = base_j + offset_i;
-          int idx2 = base_j + offset_i + step;
-          BatcherCompare(data, idx1, idx2, phase);
+      for (int base = step % phase; base <= n_size - 1 - step; base += 2 * step) {
+        for (int offset = 0; offset < step; ++offset) {
+          BatcherCompare(data, base + offset, base + offset + step, phase);
         }
       }
     }
@@ -105,10 +109,11 @@ bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
   if (GetOutput().empty()) {
     return true;
   }
-  int n_size = static_cast<int>(GetOutput().size());
+
+  const int n_size = static_cast<int>(GetOutput().size());
 
   if (IsPowerOfTwo(n_size)) {
-    int mid = n_size / 2;
+    const int mid = n_size / 2;
     if (mid > 0) {
       QuickSort(GetOutput(), 0, mid - 1);
       QuickSort(GetOutput(), mid, n_size - 1);
@@ -117,6 +122,7 @@ bool ErmakovAQuickSortBetcherTestTaskSEQ::RunImpl() {
   } else {
     QuickSort(GetOutput(), 0, n_size - 1);
   }
+
   return true;
 }
 

@@ -12,6 +12,29 @@
 
 namespace ermakov_a_quick_sort_betcher {
 
+namespace {
+
+void Partition(std::vector<int> &arr, int left, int right, int pivot, int &i, int &j) {
+  i = left;
+  j = right;
+
+  while (i <= j) {
+    while (arr[i] < pivot) {
+      ++i;
+    }
+    while (arr[j] > pivot) {
+      --j;
+    }
+    if (i <= j) {
+      std::swap(arr[i], arr[j]);
+      ++i;
+      --j;
+    }
+  }
+}
+
+}  // namespace
+
 ErmakovAQuickSortBetcherTestTaskMPI::ErmakovAQuickSortBetcherTestTaskMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
@@ -38,41 +61,28 @@ void ErmakovAQuickSortBetcherTestTaskMPI::QuickSort(std::vector<int> &arr, int l
     return;
   }
 
-  std::stack<std::pair<int, int>> s;
-  s.emplace(left, right);
+  std::stack<std::pair<int, int>> stack;
+  stack.emplace(left, right);
 
-  while (!s.empty()) {
-    const auto [l, r] = s.top();
-    s.pop();
+  while (!stack.empty()) {
+    const auto [l_bound, r_bound] = stack.top();
+    stack.pop();
 
-    if (l >= r) {
+    if (l_bound >= r_bound) {
       continue;
     }
 
-    const int pivot = arr[l + (r - l) / 2];
-    int i = l;
-    int j = r;
+    const int pivot = arr[l_bound + ((r_bound - l_bound) / 2)];
+    int i_idx = 0;
+    int j_idx = 0;
 
-    while (i <= j) {
-      while (arr[i] < pivot) {
-        ++i;
-      }
-      while (arr[j] > pivot) {
-        --j;
-      }
+    Partition(arr, l_bound, r_bound, pivot, i_idx, j_idx);
 
-      if (i <= j) {
-        std::swap(arr[i], arr[j]);
-        ++i;
-        --j;
-      }
+    if (l_bound < j_idx) {
+      stack.emplace(l_bound, j_idx);
     }
-
-    if (l < j) {
-      s.emplace(l, j);
-    }
-    if (i < r) {
-      s.emplace(i, r);
+    if (i_idx < r_bound) {
+      stack.emplace(i_idx, r_bound);
     }
   }
 }
@@ -121,9 +131,9 @@ void ErmakovAQuickSortBetcherTestTaskMPI::RunBatcherStep(int phase, int step, in
       const int p1 = base + offset;
       const int p2 = base + offset + step;
 
-      const bool active_pair = (p1 < world_size_ && p2 < world_size_) && ((p1 / (phase * 2)) == (p2 / (phase * 2)));
+      const bool active = (p1 < world_size_ && p2 < world_size_) && ((p1 / (phase * 2)) == (p2 / (phase * 2)));
 
-      if (active_pair) {
+      if (active) {
         if (world_rank_ == p1) {
           CompareSplitLow(p2);
         } else if (world_rank_ == p2) {
